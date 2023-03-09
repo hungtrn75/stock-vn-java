@@ -44,12 +44,7 @@ public class ListActivity extends AppCompatActivity {
 
     tabLayout = findViewById(R.id.tabLayout);
     refreshLayout = findViewById(R.id.refreshLayout);
-    refreshLayout.setOnRefreshListener(new OnRefreshListener() {
-      @Override
-      public void onRefresh() {
-        viewModel.getStocks();
-      }
-    });
+    refreshLayout.setOnRefreshListener(() -> viewModel.getStocks());
 
     viewModel = new HomeViewModel(getApplication());
     viewModel.init();
