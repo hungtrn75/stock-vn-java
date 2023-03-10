@@ -41,8 +41,8 @@ public class HomeViewModel extends AndroidViewModel {
   private BehaviorSubject<Boolean> loading;
 
   public Observable<List<StockItem>> getFilterStocks() {
-    return Observable.combineLatest(stocks.subscribeOn(Schedulers.io()),
-        searchTerm.subscribeOn(Schedulers.io()), (stockList, term) -> {
+    return Observable.combineLatest(stocks,
+        searchTerm, (stockList, term) -> {
           if (term == null || term.isEmpty()) {
             return stockList;
           }
@@ -177,7 +177,7 @@ public class HomeViewModel extends AndroidViewModel {
           return res;
         });
 
-    Disposable disposable = result.observeOn(AndroidSchedulers.mainThread())
+    Disposable disposable = result.observeOn(Schedulers.io())
         .subscribeOn(Schedulers.io())
         .subscribe(this::handleResponse, this::handleError, this::handleSuccess);
     mCompositeDisposable.add(disposable);
