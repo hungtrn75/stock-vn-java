@@ -78,9 +78,9 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
     stockPagerAdapter = new StockPagerAdapter(this);
     viewPager2.setAdapter(stockPagerAdapter);
 
-    Disposable disposable = viewModel.getObsStocks().observeOn(AndroidSchedulers.mainThread())
-        .subscribeOn(AndroidSchedulers.mainThread()).subscribe((tabs -> {
-          Log.e("getObsStocks", tabs.size() + "");
+    Disposable disposable = viewModel.getObsStocks().subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe((tabs -> {
           if (tabLayoutMediator == null) {
             tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager2,
                 (tab, position) -> {
@@ -91,8 +91,9 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
           stockPagerAdapter.setTabList(tabs);
           refreshLayout.setRefreshing(false);
         }));
-    Disposable disposable2 = viewModel.getFilterStocks().observeOn(AndroidSchedulers.mainThread())
-        .subscribeOn(AndroidSchedulers.mainThread()).subscribe((stockItemList -> {
+    Disposable disposable2 = viewModel.getFilterStocks().subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe((stockItemList -> {
           mStockAdapter.updateDataSource(stockItemList);
         }));
 
