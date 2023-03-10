@@ -8,6 +8,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ProgressBar;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.appcompat.widget.SearchView;
@@ -22,6 +24,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.skymapglobal.vnstock.models.SortBy;
 import com.skymapglobal.vnstock.models.StockItem;
 import com.skymapglobal.vnstock.workspace.detail.DetailActivity;
 import com.skymapglobal.vnstock.workspace.home.HomeViewModel;
@@ -31,6 +34,7 @@ import com.skymapglobal.vnstock.workspace.home.StockPagerAdapter;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +50,8 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
   private StockAdapter mStockAdapter;
   SearchView searchView;
   MenuItem searchItem;
+  MenuItem sortItem;
+  ProgressBar progressBar;
   private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
 
   @Override
@@ -58,6 +64,8 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
     tabLayout = findViewById(R.id.tabLayout);
     refreshLayout = findViewById(R.id.refreshLayout);
     refreshLayout.setOnRefreshListener(() -> viewModel.getStocks());
+
+    progressBar = findViewById(R.id.progressBar);
 
     searchRv = findViewById(R.id.searchRV);
     mStockAdapter = new StockAdapter(this, this);
@@ -72,6 +80,7 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
 
     Disposable disposable = viewModel.getObsStocks().observeOn(AndroidSchedulers.mainThread())
         .subscribeOn(AndroidSchedulers.mainThread()).subscribe((tabs -> {
+          Log.e("getObsStocks", tabs.size() + "");
           if (tabLayoutMediator == null) {
             tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager2,
                 (tab, position) -> {
@@ -86,18 +95,51 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
         .subscribeOn(AndroidSchedulers.mainThread()).subscribe((stockItemList -> {
           mStockAdapter.updateDataSource(stockItemList);
         }));
+
+    Disposable disposable3 = viewModel.getObsSortBy().observeOn(AndroidSchedulers.mainThread())
+        .subscribe((sortBy -> {
+          if (sortItem != null) {
+            if (sortBy == SortBy.CHG_DE) {
+              sortItem.setIcon(ContextCompat.getDrawable(this, R.drawable.list_de));
+            } else if (sortBy == SortBy.CHG_IN) {
+              sortItem.setIcon(ContextCompat.getDrawable(this, R.drawable.list_in));
+            } else {
+              sortItem.setIcon(ContextCompat.getDrawable(this, R.drawable.sort_az));
+            }
+            Drawable drawable = sortItem.getIcon();
+            if (drawable != null) {
+              drawable.mutate();
+              drawable.setColorFilter(ContextCompat.getColor(this, R.color.white),
+                  PorterDuff.Mode.SRC_ATOP);
+            }
+          }
+        }));
+    Disposable disposable4 = viewModel.getObsLoading().observeOn(AndroidSchedulers.mainThread())
+        .subscribe((loading -> {
+          progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }));
     mCompositeDisposable.add(disposable);
     mCompositeDisposable.add(disposable2);
+    mCompositeDisposable.add(disposable3);
+    mCompositeDisposable.add(disposable4);
   }
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.menu, menu);
     searchItem = menu.findItem(R.id.action_search);
+    sortItem = menu.findItem(R.id.action_sort);
     Drawable drawable = searchItem.getIcon();
     if (drawable != null) {
       drawable.mutate();
       drawable.setColorFilter(ContextCompat.getColor(this, R.color.white),
+          PorterDuff.Mode.SRC_ATOP);
+    }
+    Drawable drawable1 = sortItem.getIcon();
+
+    if (drawable1 != null) {
+      drawable1.mutate();
+      drawable1.setColorFilter(ContextCompat.getColor(this, R.color.white),
           PorterDuff.Mode.SRC_ATOP);
     }
     searchView = (SearchView) searchItem.getActionView();
@@ -107,13 +149,16 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
     searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
       @Override
       public boolean onMenuItemActionExpand(MenuItem item) {
+        sortItem.setVisible(false);
         searchRv.setVisibility(View.VISIBLE);
         return true;
       }
 
       @Override
       public boolean onMenuItemActionCollapse(MenuItem item) {
+        sortItem.setVisible(true);
         searchRv.setVisibility(View.INVISIBLE);
+        invalidateOptionsMenu();
         return true;
       }
     });
@@ -130,6 +175,7 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
         return false;
       }
     });
+
     return super.onCreateOptionsMenu(menu);
   }
 
@@ -148,5 +194,16 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
     Intent intent = new Intent(ListActivity.this, DetailActivity.class);
     intent.putExtra("stockItem", stockItem);
     startActivity(intent);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.action_sort:
+        viewModel.setSortType();
+        return true;
+      default:
+        return super.onOptionsItemSelected(item);
+    }
   }
 }

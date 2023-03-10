@@ -10,11 +10,17 @@ public class StockItem implements Serializable {
 
   private String indexCode = null;
 
-  public StockItem(String code, String name, String floor, String indexCode) {
+  private Double chg;
+
+  private Double ratio;
+
+  public StockItem(String code, String name, String floor, String indexCode, Double chg, Double ratio) {
     this.code = code;
     this.name = name;
     this.floor = floor;
     this.indexCode= indexCode;
+    this.chg = chg;
+    this.ratio = ratio;
   }
 
   public String getCode() {
@@ -47,5 +53,21 @@ public class StockItem implements Serializable {
 
   public void setIndexCode(String indexCode) {
     this.indexCode = indexCode;
+  }
+
+  public Double getChg() {
+    return chg;
+  }
+
+  public void setChg(Double chg) {
+    this.chg = chg;
+  }
+
+  public Double getRatio() {
+    return ratio;
+  }
+
+  public void setRatio(Double ratio) {
+    this.ratio = ratio;
   }
 }

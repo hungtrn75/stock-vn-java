@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import com.skymapglobal.vnstock.models.ListStockResp;
+import com.skymapglobal.vnstock.models.SortBy;
 import com.skymapglobal.vnstock.models.Stock;
 import com.skymapglobal.vnstock.models.StockItem;
 import com.skymapglobal.vnstock.models.Tab;
@@ -26,6 +27,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class HomeViewModel extends AndroidViewModel {
+
   APIInterface service;
 
   public HomeViewModel(@NonNull Application application) {
@@ -35,6 +37,8 @@ public class HomeViewModel extends AndroidViewModel {
   private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
   private BehaviorSubject<List<StockItem>> stocks;
   private BehaviorSubject<String> searchTerm;
+  private BehaviorSubject<SortBy> sortBy;
+  private BehaviorSubject<Boolean> loading;
 
   public Observable<List<StockItem>> getFilterStocks() {
     return Observable.combineLatest(stocks.subscribeOn(Schedulers.io()),
@@ -49,43 +53,62 @@ public class HomeViewModel extends AndroidViewModel {
         });
   }
 
+  public Observable<SortBy> getObsSortBy() {
+    return sortBy;
+  }
+
+  public Observable<Boolean> getObsLoading() {
+    return loading;
+  }
+
   public Observable<List<Tab>> getObsStocks() {
-    return stocks.map(stockItemList -> {
-      List<StockItem> upcom = new ArrayList<>();
-      List<StockItem> hose = new ArrayList<>();
-      List<StockItem> vn30 = new ArrayList<>();
-      List<StockItem> hnx = new ArrayList<>();
-      List<StockItem> hnx30 = new ArrayList<>();
-      stockItemList.forEach((stockItem -> {
-        switch (stockItem.getFloor()) {
-          case "HNX":
-            if (stockItem.getIndexCode() != null && stockItem.getIndexCode().equals("HNX30")) {
-              hnx30.add(stockItem);
-            } else {
-              hnx.add(stockItem);
+    return Observable.combineLatest(stocks,
+        sortBy, (stockItemList, sort) -> {
+          Log.e("adas", stockItemList.size() + "");
+          if (sort == SortBy.CHG_DE) {
+            stockItemList.sort(
+                ((t1, t2) -> t2.getRatio().compareTo(t1.getRatio())));
+          } else if (sort == SortBy.CHG_IN) {
+            stockItemList.sort(
+                (Comparator.comparing(StockItem::getRatio)));
+          } else {
+            stockItemList.sort(Comparator.comparing(StockItem::getCode));
+          }
+          List<StockItem> upcom = new ArrayList<>();
+          List<StockItem> hose = new ArrayList<>();
+          List<StockItem> vn30 = new ArrayList<>();
+          List<StockItem> hnx = new ArrayList<>();
+          List<StockItem> hnx30 = new ArrayList<>();
+          stockItemList.forEach((stockItem -> {
+            switch (stockItem.getFloor()) {
+              case "HNX":
+                if (stockItem.getIndexCode() != null && stockItem.getIndexCode().equals("HNX30")) {
+                  hnx30.add(stockItem);
+                } else {
+                  hnx.add(stockItem);
+                }
+                break;
+              case "UPCOM":
+                upcom.add(stockItem);
+                break;
+              case "HOSE":
+                if (stockItem.getIndexCode() != null && stockItem.getIndexCode().equals("VN30")) {
+                  vn30.add(stockItem);
+                } else {
+                  hose.add(stockItem);
+                }
+                break;
             }
-            break;
-          case "UPCOM":
-            upcom.add(stockItem);
-            break;
-          case "HOSE":
-            if (stockItem.getIndexCode() != null && stockItem.getIndexCode().equals("VN30")) {
-              vn30.add(stockItem);
-            } else {
-              hose.add(stockItem);
-            }
-            break;
-        }
-      }));
-      List<Tab> mTabs = new ArrayList<>();
-      mTabs.add(new Tab(counter, "VN30", vn30));
-      mTabs.add(new Tab(counter + 1, "HOSE", hose));
-      mTabs.add(new Tab(counter + 2, "HNX30", hnx30));
-      mTabs.add(new Tab(counter + 3, "HNX", hnx));
-      mTabs.add(new Tab(counter + 4, "UPCOM", upcom));
-      counter += 5;
-      return mTabs;
-    });
+          }));
+          List<Tab> mTabs = new ArrayList<>();
+          mTabs.add(new Tab(counter, "VN30", vn30));
+          mTabs.add(new Tab(counter + 1, "HOSE", hose));
+          mTabs.add(new Tab(counter + 2, "HNX30", hnx30));
+          mTabs.add(new Tab(counter + 3, "HNX", hnx));
+          mTabs.add(new Tab(counter + 4, "UPCOM", upcom));
+          counter += 5;
+          return mTabs;
+        });
   }
 
   private Long counter = 0L;
@@ -94,9 +117,12 @@ public class HomeViewModel extends AndroidViewModel {
     service = APIClient.getClient().create(APIInterface.class);
     stocks = BehaviorSubject.create();
     searchTerm = BehaviorSubject.create();
+    sortBy = BehaviorSubject.create();
+    loading = BehaviorSubject.create();
     stocks.onNext(new ArrayList<>());
+    sortBy.onNext(SortBy.NAME);
     counter = 5L;
-    getStocks();
+    getStocks(true);
   }
 
   public void setSearchTerm(String term) {
@@ -104,7 +130,20 @@ public class HomeViewModel extends AndroidViewModel {
     searchTerm.onNext(term);
   }
 
-  public void getStocks() {
+  public void setSortType() {
+    if (sortBy.getValue() == SortBy.NAME) {
+      sortBy.onNext(SortBy.CHG_DE);
+    } else if (sortBy.getValue() == SortBy.CHG_DE) {
+      sortBy.onNext(SortBy.CHG_IN);
+    } else {
+      sortBy.onNext(SortBy.NAME);
+    }
+  }
+
+  public void getStocks(Boolean... showLoadings) {
+    if (showLoadings.length > 0 && showLoadings[0]) {
+      loading.onNext(true);
+    }
     Observable<List<Stock>> obs1 = service.getStocks(1);
     Observable<List<Stock>> obs2 = service.getStocks(2);
     Observable<List<Stock>> obs9 = service.getStocks(9);
@@ -127,12 +166,14 @@ public class HomeViewModel extends AndroidViewModel {
 
           resp.getData().forEach((stock2 -> {
             Stock stock = memoStocks.get(stock2.getCode());
-            StockItem stockItem = new StockItem(stock2.getCode(), stock2.getCompanyName(),
-                stock2.getFloor(), stock2.getIndexCode());
-            res.add(stockItem);
-
+            if (stock != null) {
+              StockItem stockItem = new StockItem(stock2.getCode(), stock2.getCompanyName(),
+                  stock2.getFloor(), stock2.getIndexCode(), stock.k,
+                  100 * (stock.l - stock.b) / stock.b);
+              res.add(stockItem);
+            }
           }));
-          res.sort((Comparator.comparing(StockItem::getCode)));
+
           return res;
         });
 
@@ -147,10 +188,12 @@ public class HomeViewModel extends AndroidViewModel {
   }
 
   private void handleError(Throwable error) {
+    Log.e("handleError", error.toString());
+    loading.onNext(false);
   }
 
   private void handleSuccess() {
-
+    loading.onNext(false);
   }
 
   public void clearObservables() {
