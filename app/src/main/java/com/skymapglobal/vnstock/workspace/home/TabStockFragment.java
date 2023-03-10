@@ -1,5 +1,6 @@
 package com.skymapglobal.vnstock.workspace.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
@@ -10,11 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.skymapglobal.vnstock.ListActivity;
 import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.models.StockItem;
+import com.skymapglobal.vnstock.workspace.detail.DetailActivity;
 import java.util.List;
 
-public class TabStockFragment extends Fragment {
+public class TabStockFragment extends Fragment implements StockClickListener {
 
   private List<StockItem> stockItemList;
   private RecyclerView mRvStock;
@@ -47,7 +50,7 @@ public class TabStockFragment extends Fragment {
     super.onViewCreated(view, savedInstanceState);
     mRvStock = getView().findViewById(R.id.rvStock);
 
-    mStockAdapter = new StockAdapter(getContext());
+    mStockAdapter = new StockAdapter(getContext(), this);
     mRvStock.setAdapter(mStockAdapter);
     mRvStock.setLayoutManager(new LinearLayoutManager(getContext()));
     if (stockItemList != null) {
@@ -59,5 +62,12 @@ public class TabStockFragment extends Fragment {
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
     return inflater.inflate(R.layout.fragment_tab_stock, container, false);
+  }
+
+  @Override
+  public void onItemClickListener(StockItem stockItem, Integer position) {
+    Intent intent = new Intent(getActivity(), DetailActivity.class);
+    intent.putExtra("stockItem", stockItem);
+    startActivity(intent);
   }
 }

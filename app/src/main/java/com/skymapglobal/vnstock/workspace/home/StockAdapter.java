@@ -15,10 +15,12 @@ import java.util.List;
 
 public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> {
   private Context mContext;
+  private StockClickListener listener;
   private List<StockItem> mStocks;
 
-  public StockAdapter(Context context){
+  public StockAdapter(Context context, StockClickListener listener){
     this.mContext = context;
+    this.listener = listener;
     this.mStocks = new ArrayList<>();
   }
 
@@ -41,6 +43,9 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> 
   public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
     final StockItem stock = mStocks.get(position);
     holder.mName.setText(stock.getName());
+    holder.itemView.setOnClickListener(v->{
+      listener.onItemClickListener(stock,position);
+    });
   }
 
   @Override
