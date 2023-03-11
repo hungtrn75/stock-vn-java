@@ -44,19 +44,6 @@ public class DetailActivity extends AppCompatActivity {
         detailPagerAdapter = new DetailPagerAdapter(this, tabs, stockItem.getCode());
         viewPager2.setAdapter(detailPagerAdapter);
 
-        viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                viewPager2.setUserInputEnabled(position != 0);
-            }
-        });
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager2,
                 (tab, position) -> {
                     tab.setText(tabs.get(position));

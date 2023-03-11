@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.skymapglobal.vnstock.R;
+import com.skymapglobal.vnstock.module.NestedScrollDelegate;
 import com.skymapglobal.vnstock.workspace.home.HomeViewModel;
 import com.tradingview.lightweightcharts.api.interfaces.ChartApi;
 import com.tradingview.lightweightcharts.api.options.models.CandlestickSeriesOptions;
@@ -82,6 +83,7 @@ public class ChartFragment extends Fragment {
 
     private void setupViews() {
         chartsView = requireView().findViewById(R.id.charts_view);
+        chartsView.addTouchDelegate(new NestedScrollDelegate(getContext()));
     }
 
     private void setupListeners() {
