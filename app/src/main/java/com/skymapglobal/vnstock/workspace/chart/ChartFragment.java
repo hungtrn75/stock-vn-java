@@ -20,8 +20,12 @@ import com.tradingview.lightweightcharts.api.interfaces.ChartApi;
 import com.tradingview.lightweightcharts.api.options.models.CandlestickSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.ChartOptions;
 import com.tradingview.lightweightcharts.api.options.models.CrosshairOptions;
+import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.LayoutOptions;
+import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
 import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode;
+import com.tradingview.lightweightcharts.api.series.models.PriceFormat;
+import com.tradingview.lightweightcharts.api.series.models.PriceScaleId;
 import com.tradingview.lightweightcharts.view.ChartsView;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -31,6 +35,8 @@ import io.reactivex.disposables.Disposable;
 public class ChartFragment extends Fragment {
     private String code;
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
+    private final CandlestickSeriesOptions candlestickSeriesOptions = new CandlestickSeriesOptions();
+    private final HistogramSeriesOptions histogramSeriesOptions = new HistogramSeriesOptions();
     private ChartsView chartsView;
     private ChartViewModel viewModel;
 
@@ -80,8 +86,12 @@ public class ChartFragment extends Fragment {
 
     private void setupListeners() {
         Disposable l1 = viewModel.getCandlestickDatas().subscribeOn(AndroidSchedulers.mainThread()).subscribe(data -> {
-            chartsView.getApi().addCandlestickSeries(new CandlestickSeriesOptions(), (seriesApi -> {
-                seriesApi.setData(data);
+            chartsView.getApi().addCandlestickSeries(candlestickSeriesOptions, (seriesApi -> {
+                seriesApi.setData(data.getCandlestickDataList());
+                return null;
+            }));
+            chartsView.getApi().addHistogramSeries(histogramSeriesOptions, (seriesApi -> {
+                seriesApi.setData(data.getHistogramDataList());
                 return null;
             }));
         });
@@ -107,6 +117,10 @@ public class ChartFragment extends Fragment {
         ChartOptions chartOptions = new ChartOptions();
         chartOptions.setCrosshair(crosshairOptions);
         chartsView.getApi().applyOptions(chartOptions);
+
+        histogramSeriesOptions.setPriceFormat(PriceFormat.Companion.priceFormatBuiltIn(PriceFormat.Type.VOLUME, 1, 1f));
+        histogramSeriesOptions.setPriceScaleId(new PriceScaleId(""));
+        histogramSeriesOptions.setScaleMargins(new PriceScaleMargins(0.8f, 0f));
     }
 
     @Override
