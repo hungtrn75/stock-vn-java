@@ -2,6 +2,8 @@ package com.skymapglobal.vnstock.service;
 
 import com.skymapglobal.vnstock.models.ListStockResp;
 import com.skymapglobal.vnstock.models.Stock;
+import com.skymapglobal.vnstock.models.Stockmarket;
+
 import java.util.List;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
@@ -13,4 +15,7 @@ public interface APIInterface {
 
   @GET("https://finfo-api.vndirect.com.vn/v4/stocks?q=type:STOCK~status:LISTED&fields=code,companyName,companyNameEng,shortName,floor,industryName,indexCode&size=3000")
   Observable<ListStockResp> getStock2s();
+
+ @GET("https://banggia.cafef.vn/stockhandler.ashx?index=true")
+  Observable<List<Stockmarket>> getStockmarket();
 }

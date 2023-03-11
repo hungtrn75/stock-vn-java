@@ -8,6 +8,7 @@ import com.skymapglobal.vnstock.models.ListStockResp;
 import com.skymapglobal.vnstock.models.SortBy;
 import com.skymapglobal.vnstock.models.Stock;
 import com.skymapglobal.vnstock.models.StockItem;
+import com.skymapglobal.vnstock.models.Stockmarket;
 import com.skymapglobal.vnstock.models.Tab;
 import com.skymapglobal.vnstock.service.APIClient;
 import com.skymapglobal.vnstock.service.APIInterface;
@@ -24,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class HomeViewModel extends AndroidViewModel {
@@ -101,17 +103,15 @@ public class HomeViewModel extends AndroidViewModel {
             }
           }));
           List<Tab> mTabs = new ArrayList<>();
-          mTabs.add(new Tab(counter, "VN30", vn30));
-          mTabs.add(new Tab(counter + 1, "HOSE", hose));
-          mTabs.add(new Tab(counter + 2, "HNX30", hnx30));
-          mTabs.add(new Tab(counter + 3, "HNX", hnx));
-          mTabs.add(new Tab(counter + 4, "UPCOM", upcom));
-          counter += 5;
+          mTabs.add(new Tab( "VN30", vn30));
+          mTabs.add(new Tab( "HOSE", hose));
+          mTabs.add(new Tab( "HNX30", hnx30));
+          mTabs.add(new Tab( "HNX", hnx));
+          mTabs.add(new Tab( "UPCOM", upcom));
           return mTabs;
         });
   }
 
-  private Long counter = 0L;
 
   public void init() {
     service = APIClient.getClient().create(APIInterface.class);
@@ -121,7 +121,6 @@ public class HomeViewModel extends AndroidViewModel {
     loading = BehaviorSubject.create();
     stocks.onNext(new ArrayList<>());
     sortBy.onNext(SortBy.NAME);
-    counter = 5L;
     getStocks(true);
   }
 
@@ -140,6 +139,9 @@ public class HomeViewModel extends AndroidViewModel {
     }
   }
 
+  public Observable<List<Stockmarket>> getStockmarket(){
+     return Observable.interval(0,1, TimeUnit.MINUTES).flatMap(aLong -> service.getStockmarket()).repeat();
+  }
   public void getStocks(Boolean... showLoadings) {
     if (showLoadings.length > 0 && showLoadings[0]) {
       loading.onNext(true);
@@ -169,7 +171,8 @@ public class HomeViewModel extends AndroidViewModel {
             if (stock != null) {
               StockItem stockItem = new StockItem(stock2.getCode(), stock2.getCompanyName(),
                   stock2.getFloor(), stock2.getIndexCode(), stock.k,
-                  100 * (stock.l - stock.b) / stock.b);
+                  100 * (stock.l - stock.b) / stock.b, stock.l,stock.n
+                      );
               res.add(stockItem);
             }
           }));

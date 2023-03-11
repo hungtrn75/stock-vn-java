@@ -33,7 +33,7 @@ public class StockPagerAdapter extends FragmentStateAdapter {
   @Override
   public Fragment createFragment(int position) {
     Tab tab = tabList.get(position);
-    TabStockFragment memo = new TabStockFragment(tabList.get(position).getStocks());
+    TabStockFragment memo = new TabStockFragment(tab.getStocks());
     memoFragments.put(tab.getTitle(), memo);
     return memo;
   }

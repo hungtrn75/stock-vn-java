@@ -97,6 +97,7 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
           mStockAdapter.updateDataSource(stockItemList);
         }));
 
+
     Disposable disposable3 = viewModel.getObsSortBy().observeOn(AndroidSchedulers.mainThread())
         .subscribe((sortBy -> {
           if (sortItem != null) {
@@ -119,6 +120,11 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
         .subscribe((loading -> {
           progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
         }));
+
+    Disposable disposable5 = viewModel.getStockmarket().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(stockmarkets -> {
+                      Log.e("getStockmarket", String.valueOf(stockmarkets.size()));
+                    });
     mCompositeDisposable.add(disposable);
     mCompositeDisposable.add(disposable2);
     mCompositeDisposable.add(disposable3);

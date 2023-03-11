@@ -8,13 +8,15 @@ public class Stock {
   public Double k;
   public Double l;
 
+  public Double n;
+
   @Override
   public String toString() {
     return "Stock{" +
         "a='" + a + '\'' +
         ", b=" + b +
         ", k=" + k +
-        ", l=" + l +
+        ", l=" + l + ",n=" + n +
         '}';
   }
 }

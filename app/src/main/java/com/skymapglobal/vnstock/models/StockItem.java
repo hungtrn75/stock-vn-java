@@ -14,13 +14,35 @@ public class StockItem implements Serializable {
 
   private Double ratio;
 
-  public StockItem(String code, String name, String floor, String indexCode, Double chg, Double ratio) {
+  public Double getPrice() {
+    return price;
+  }
+
+  public void setPrice(Double price) {
+    this.price = price;
+  }
+
+  public Double getVol() {
+    return vol;
+  }
+
+  public void setVol(Double vol) {
+    this.vol = vol;
+  }
+
+  private Double price;
+  private  Double vol;
+
+
+  public StockItem(String code, String name, String floor, String indexCode, Double chg, Double ratio,Double price,Double vol) {
     this.code = code;
     this.name = name;
     this.floor = floor;
     this.indexCode= indexCode;
     this.chg = chg;
     this.ratio = ratio;
+    this.price = price;
+    this.vol = vol;
   }
 
   public String getCode() {
