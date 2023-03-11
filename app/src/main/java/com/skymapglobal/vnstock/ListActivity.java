@@ -17,6 +17,7 @@ import androidx.appcompat.widget.SearchView.OnCloseListener;
 import androidx.appcompat.widget.SearchView.OnQueryTextListener;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuItemCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -72,7 +73,8 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
     searchRv.setAdapter(mStockAdapter);
     searchRv.setLayoutManager(new LinearLayoutManager(this));
 
-    viewModel = new HomeViewModel(getApplication());
+    ViewModelProvider viewModelProvider = new ViewModelProvider(this);
+    viewModel = viewModelProvider.get(HomeViewModel.class);
     viewModel.init();
 
     stockPagerAdapter = new StockPagerAdapter(this);
@@ -188,7 +190,6 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
 
   @Override
   protected void onDestroy() {
-    viewModel.clearObservables();
     mCompositeDisposable.clear();
     stockPagerAdapter.dispose();
     super.onDestroy();

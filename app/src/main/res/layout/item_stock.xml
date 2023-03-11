@@ -2,10 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="10dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-  <androidx.cardview.widget.CardView
+  <com.google.android.material.card.MaterialCardView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       app:cardBackgroundColor="@color/white"
@@ -81,5 +80,5 @@
       </LinearLayout>
     </LinearLayout>
 
-  </androidx.cardview.widget.CardView>
+  </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

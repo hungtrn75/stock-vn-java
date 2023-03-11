@@ -4,6 +4,8 @@ import android.app.Application;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.ViewModel;
+
 import com.skymapglobal.vnstock.models.ListStockResp;
 import com.skymapglobal.vnstock.models.SortBy;
 import com.skymapglobal.vnstock.models.Stock;
@@ -28,13 +30,8 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class HomeViewModel extends AndroidViewModel {
-
+public class HomeViewModel extends ViewModel {
   APIInterface service;
-
-  public HomeViewModel(@NonNull Application application) {
-    super(application);
-  }
 
   private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
   private BehaviorSubject<List<StockItem>> stocks;
@@ -199,7 +196,9 @@ public class HomeViewModel extends AndroidViewModel {
     loading.onNext(false);
   }
 
-  public void clearObservables() {
-    mCompositeDisposable.clear();
-  }
+    @Override
+    protected void onCleared() {
+        mCompositeDisposable.clear();
+        super.onCleared();
+    }
 }
