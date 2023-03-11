@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.module.NestedScrollDelegate;
@@ -25,9 +26,14 @@ import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptio
 import com.tradingview.lightweightcharts.api.options.models.LayoutOptions;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
 import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode;
+import com.tradingview.lightweightcharts.api.series.models.BarPrices;
+import com.tradingview.lightweightcharts.api.series.models.MouseEventParams;
 import com.tradingview.lightweightcharts.api.series.models.PriceFormat;
 import com.tradingview.lightweightcharts.api.series.models.PriceScaleId;
 import com.tradingview.lightweightcharts.view.ChartsView;
+
+import java.util.Arrays;
+import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -39,6 +45,7 @@ public class ChartFragment extends Fragment {
     private final CandlestickSeriesOptions candlestickSeriesOptions = new CandlestickSeriesOptions();
     private final HistogramSeriesOptions histogramSeriesOptions = new HistogramSeriesOptions();
     private ChartsView chartsView;
+    private LinearLayout tooltip;
     private ChartViewModel viewModel;
 
     public ChartFragment() {
@@ -84,9 +91,28 @@ public class ChartFragment extends Fragment {
     private void setupViews() {
         chartsView = requireView().findViewById(R.id.charts_view);
         chartsView.addTouchDelegate(new NestedScrollDelegate(getContext()));
+
+        tooltip = requireView().findViewById(R.id.tooltip);
     }
 
     private void setupListeners() {
+        chartsView.getApi().subscribeCrosshairMove((mouseEventParams -> {
+            if (mouseEventParams.getSeriesPrices() != null) {
+                Log.e("subscribeCrosshairMove", "/" + mouseEventParams.getPoint());
+                tooltip.setVisibility(View.VISIBLE);
+                List<BarPrices> barPrices = Arrays.asList(mouseEventParams.getSeriesPrices());
+                if (barPrices.size() > 0) {
+
+                } else {
+                    tooltip.setVisibility(View.GONE);
+                }
+            } else {
+                tooltip.setVisibility(View.GONE);
+            }
+
+            return null;
+        }));
+
         Disposable l1 = viewModel.getCandlestickDatas().subscribeOn(AndroidSchedulers.mainThread()).subscribe(data -> {
             chartsView.getApi().addCandlestickSeries(candlestickSeriesOptions, (seriesApi -> {
                 seriesApi.setData(data.getCandlestickDataList());
@@ -99,6 +125,7 @@ public class ChartFragment extends Fragment {
         });
         mCompositeDisposable.add(l1);
     }
+
 
     private void subscribeOnChartReady(ChartsView view) {
         view.subscribeOnChartStateChange((state -> {
@@ -126,8 +153,9 @@ public class ChartFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
+    public void onDestroyView() {
         mCompositeDisposable.clear();
-        super.onDestroy();
+        super.onDestroyView();
     }
+
 }
