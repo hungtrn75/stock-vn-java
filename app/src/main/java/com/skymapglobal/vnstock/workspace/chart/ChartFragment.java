@@ -1,5 +1,6 @@
 package com.skymapglobal.vnstock.workspace.chart;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -14,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.module.NestedScrollDelegate;
@@ -26,13 +28,17 @@ import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptio
 import com.tradingview.lightweightcharts.api.options.models.LayoutOptions;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
 import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode;
+import com.tradingview.lightweightcharts.api.series.models.BarPrice;
 import com.tradingview.lightweightcharts.api.series.models.BarPrices;
 import com.tradingview.lightweightcharts.api.series.models.MouseEventParams;
 import com.tradingview.lightweightcharts.api.series.models.PriceFormat;
 import com.tradingview.lightweightcharts.api.series.models.PriceScaleId;
+import com.tradingview.lightweightcharts.api.series.models.Time;
 import com.tradingview.lightweightcharts.view.ChartsView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -44,8 +50,16 @@ public class ChartFragment extends Fragment {
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
     private final CandlestickSeriesOptions candlestickSeriesOptions = new CandlestickSeriesOptions();
     private final HistogramSeriesOptions histogramSeriesOptions = new HistogramSeriesOptions();
+    private List<String> resolutions = new ArrayList<>();
     private ChartsView chartsView;
     private LinearLayout tooltip;
+    private TextView tTime;
+    private TextView tOpen;
+    private TextView tHigh;
+    private TextView tLow;
+    private TextView tClose;
+    private TextView tChange;
+    private TextView tVolume;
     private ChartViewModel viewModel;
 
     public ChartFragment() {
@@ -77,6 +91,7 @@ public class ChartFragment extends Fragment {
 
         setupViews();
         applyChartOptions();
+        createResolutions();
         subscribeOnChartReady(chartsView);
         setupListeners();
 
@@ -93,16 +108,45 @@ public class ChartFragment extends Fragment {
         chartsView.addTouchDelegate(new NestedScrollDelegate(getContext()));
 
         tooltip = requireView().findViewById(R.id.tooltip);
+        tTime = requireView().findViewById(R.id.tTime);
+        tOpen = requireView().findViewById(R.id.tOpen);
+        tHigh = requireView().findViewById(R.id.tHigh);
+        tLow = requireView().findViewById(R.id.tLow);
+        tClose = requireView().findViewById(R.id.tClose);
+        tChange = requireView().findViewById(R.id.tChange);
+        tVolume = requireView().findViewById(R.id.tVolume);
     }
 
+    @SuppressLint({"DefaultLocale", "SetTextI18n"})
     private void setupListeners() {
         chartsView.getApi().subscribeCrosshairMove((mouseEventParams -> {
             if (mouseEventParams.getSeriesPrices() != null) {
-                Log.e("subscribeCrosshairMove", "/" + mouseEventParams.getPoint());
                 tooltip.setVisibility(View.VISIBLE);
                 List<BarPrices> barPrices = Arrays.asList(mouseEventParams.getSeriesPrices());
                 if (barPrices.size() > 0) {
+                    Time.Utc businessDay = (Time.Utc) mouseEventParams.getTime();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(businessDay.getDate());
+                    String time = String.format("%d-%d-%d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+                    BarPrice price = barPrices.get(0).getPrices();
 
+                    tTime.setText(time);
+                    tOpen.setText(price.getOpen() != null ? price.getOpen().toString() : "0");
+                    tHigh.setText(price.getHigh() != null ? price.getHigh().toString() : "0");
+                    tLow.setText(price.getLow() != null ? price.getLow().toString() : "0");
+                    tClose.setText(price.getClose() != null ? price.getClose().toString() : "0");
+                    if (price.getOpen() != null && price.getClose() != null) {
+                        float chg = price.getClose() - price.getOpen();
+                        Float ratio = 100 * (price.getClose() - price.getOpen()) / price.getOpen();
+                        tChange.setText(String.format("%s%.2f(%s%.2f%s)", chg > 0 ? "+" : "", chg, chg > 0 ? "+" : "", ratio, "%"));
+                    } else {
+                        tChange.setVisibility(View.GONE);
+                    }
+                    if (viewModel.getVolumes().containsKey(time) && viewModel.getVolumes().get(time) != null) {
+                        tVolume.setText(viewModel.getVolumes().get(time).toString());
+                    } else {
+                        tVolume.setVisibility(View.GONE);
+                    }
                 } else {
                     tooltip.setVisibility(View.GONE);
                 }
@@ -150,6 +194,13 @@ public class ChartFragment extends Fragment {
         histogramSeriesOptions.setPriceFormat(PriceFormat.Companion.priceFormatBuiltIn(PriceFormat.Type.VOLUME, 1, 1f));
         histogramSeriesOptions.setPriceScaleId(new PriceScaleId(""));
         histogramSeriesOptions.setScaleMargins(new PriceScaleMargins(0.8f, 0f));
+    }
+
+    private void createResolutions() {
+        resolutions.add("1phút");
+        resolutions.add("5phút");
+        resolutions.add("15phút");
+        resolutions.add("1ngày");
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.skymapglobal.vnstock.workspace.chart;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import androidx.lifecycle.ViewModel;
@@ -13,6 +14,8 @@ import com.tradingview.lightweightcharts.api.series.models.HistogramData;
 import com.tradingview.lightweightcharts.api.series.models.Time;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -30,6 +33,8 @@ public class ChartViewModel extends ViewModel {
         return candlestickDatas;
     }
 
+    private HashMap<String, Long> memoVolumes = new HashMap<>();
+
     @Override
     protected void onCleared() {
         mCompositeDisposable.clear();
@@ -43,11 +48,20 @@ public class ChartViewModel extends ViewModel {
         mCompositeDisposable.add(history);
     }
 
+    public HashMap<String, Long> getVolumes(){
+        return memoVolumes;
+    }
+
+    @SuppressLint("DefaultLocale")
     private void handleResponse(History history) {
         List<CandlestickData> data = new ArrayList<>();
         List<HistogramData> histogramData = new ArrayList<>();
         for (int i = 0; i < history.getT().size(); i++) {
             Time time = new Time.Utc(history.getT().get(i));
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(time.getDate());
+            String key = String.format("%d-%d-%d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+            memoVolumes.put(key, history.getV().get(i));
             CandlestickData candlestickData = new CandlestickData(time, history.getO().get(i), history.getH().get(i), history.getL().get(i), history.getC().get(i), null, null, null);
             data.add(candlestickData);
             HistogramData temp = new HistogramData(time, history.getV().get(i), null);
