@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,9 +20,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.skymapglobal.vnstock.R;
+import com.skymapglobal.vnstock.models.Resolution;
 import com.skymapglobal.vnstock.module.NestedScrollDelegate;
 import com.skymapglobal.vnstock.workspace.home.HomeViewModel;
 import com.tradingview.lightweightcharts.api.interfaces.ChartApi;
+import com.tradingview.lightweightcharts.api.interfaces.SeriesApi;
 import com.tradingview.lightweightcharts.api.options.models.CandlestickSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.ChartOptions;
 import com.tradingview.lightweightcharts.api.options.models.CrosshairOptions;
@@ -39,18 +43,22 @@ import com.tradingview.lightweightcharts.view.ChartsView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
-public class ChartFragment extends Fragment {
+public class ChartFragment extends Fragment implements ResolutionClickListener {
     private String code;
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
     private final CandlestickSeriesOptions candlestickSeriesOptions = new CandlestickSeriesOptions();
     private final HistogramSeriesOptions histogramSeriesOptions = new HistogramSeriesOptions();
-    private List<String> resolutions = new ArrayList<>();
+    private List<Resolution> resolutions = new ArrayList<>();
+    private Set<SeriesApi> seriesApis = new HashSet<>();
     private ChartsView chartsView;
     private LinearLayout tooltip;
     private TextView tTime;
@@ -60,6 +68,9 @@ public class ChartFragment extends Fragment {
     private TextView tClose;
     private TextView tChange;
     private TextView tVolume;
+
+    private RecyclerView resolutionList;
+    private ResolutionAdapter resolutionAdapter;
     private ChartViewModel viewModel;
 
     public ChartFragment() {
@@ -89,11 +100,12 @@ public class ChartFragment extends Fragment {
         ViewModelProvider viewModelProvider = new ViewModelProvider(this);
         viewModel = viewModelProvider.get(ChartViewModel.class);
 
+        createResolutions();
         setupViews();
         applyChartOptions();
-        createResolutions();
         subscribeOnChartReady(chartsView);
         setupListeners();
+
 
     }
 
@@ -115,6 +127,12 @@ public class ChartFragment extends Fragment {
         tClose = requireView().findViewById(R.id.tClose);
         tChange = requireView().findViewById(R.id.tChange);
         tVolume = requireView().findViewById(R.id.tVolume);
+        resolutionList = requireView().findViewById(R.id.resolutionList);
+        resolutionAdapter = new ResolutionAdapter(getContext(), resolutions, this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setOrientation(RecyclerView.HORIZONTAL);
+        resolutionList.setLayoutManager(layoutManager);
+        resolutionList.setAdapter(resolutionAdapter);
     }
 
     @SuppressLint({"DefaultLocale", "SetTextI18n"})
@@ -127,7 +145,7 @@ public class ChartFragment extends Fragment {
                     Time.Utc businessDay = (Time.Utc) mouseEventParams.getTime();
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(businessDay.getDate());
-                    String time = String.format("%d-%d-%d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+                    String time = String.format("%d-%d-%d %d-%d-%d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND));
                     BarPrice price = barPrices.get(0).getPrices();
 
                     tTime.setText(time);
@@ -142,8 +160,9 @@ public class ChartFragment extends Fragment {
                     } else {
                         tChange.setVisibility(View.GONE);
                     }
-                    if (viewModel.getVolumes().containsKey(time) && viewModel.getVolumes().get(time) != null) {
-                        tVolume.setText(viewModel.getVolumes().get(time).toString());
+                    Long key = businessDay.getDate().getTime();
+                    if (viewModel.getVolumes().containsKey(key) && viewModel.getVolumes().get(key) != null) {
+                        tVolume.setText(viewModel.getVolumes().get(key).toString());
                     } else {
                         tVolume.setVisibility(View.GONE);
                     }
@@ -157,17 +176,28 @@ public class ChartFragment extends Fragment {
             return null;
         }));
 
-        Disposable l1 = viewModel.getCandlestickDatas().subscribeOn(AndroidSchedulers.mainThread()).subscribe(data -> {
+        Disposable l1 = viewModel.getCandlestickDatas(code).subscribeOn(AndroidSchedulers.mainThread()).subscribe(data -> {
+            seriesApis.forEach(s -> chartsView.getApi().removeSeries(s, () -> {
+                return null;
+            }));
+            seriesApis.clear();
             chartsView.getApi().addCandlestickSeries(candlestickSeriesOptions, (seriesApi -> {
                 seriesApi.setData(data.getCandlestickDataList());
+                seriesApis.add(seriesApi);
                 return null;
             }));
             chartsView.getApi().addHistogramSeries(histogramSeriesOptions, (seriesApi -> {
+                seriesApis.add(seriesApi);
                 seriesApi.setData(data.getHistogramDataList());
                 return null;
             }));
+        }, Throwable::printStackTrace);
+
+        Disposable l2 = viewModel.getSelectedResolution().subscribeOn(AndroidSchedulers.mainThread()).subscribe(resolution -> {
+            resolutionAdapter.setSelected(resolution);
         });
         mCompositeDisposable.add(l1);
+        mCompositeDisposable.add(l2);
     }
 
 
@@ -175,7 +205,7 @@ public class ChartFragment extends Fragment {
         view.subscribeOnChartStateChange((state -> {
             if (state instanceof ChartsView.State.Ready) {
                 Log.e("OnChartReady", state.toString());
-                viewModel.getDatas(code);
+                viewModel.setResolution(resolutions.get(5));
             } else if (state instanceof ChartsView.State.Error) {
                 Log.e("OnChartError", ((ChartsView.State.Error) state).getException().getLocalizedMessage());
             }
@@ -197,10 +227,14 @@ public class ChartFragment extends Fragment {
     }
 
     private void createResolutions() {
-        resolutions.add("1phút");
-        resolutions.add("5phút");
-        resolutions.add("15phút");
-        resolutions.add("1ngày");
+        resolutions.add(new Resolution(1, "1m", "1"));
+        resolutions.add(new Resolution(2, "5m", "5"));
+        resolutions.add(new Resolution(3, "15m", "15"));
+        resolutions.add(new Resolution(4, "30m", "30"));
+        resolutions.add(new Resolution(5, "1H", "60"));
+        resolutions.add(new Resolution(6, "1D", "1D"));
+        resolutions.add(new Resolution(7, "1W", "D"));
+        resolutions.add(new Resolution(8, "1M", "D"));
     }
 
     @Override
@@ -209,4 +243,8 @@ public class ChartFragment extends Fragment {
         super.onDestroyView();
     }
 
+    @Override
+    public void onResolutionClickListener(Resolution resolution, Integer position) {
+        viewModel.setResolution(resolution);
+    }
 }

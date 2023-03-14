@@ -21,6 +21,6 @@ public interface APIInterface {
     @GET("https://banggia.cafef.vn/stockhandler.ashx?index=true")
     Observable<List<Stockmarket>> getStockmarket();
 
-    @GET("https://dchart-api.vndirect.com.vn/dchart/history?resolution=D")
-    Observable<History> getHistory(@Query("symbol") String code,@Query("from") Long from,@Query("to") Long to);
+    @GET("https://dchart-api.vndirect.com.vn/dchart/history")
+    Observable<History> getHistory(@Query("symbol") String code, @Query("from") Long from, @Query("to") Long to, @Query("resolution") String resolution);
 }

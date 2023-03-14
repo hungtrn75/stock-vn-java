@@ -11,4 +11,5 @@
   <color name="red">#fc0324</color>
   <color name="yellow">#fcb103</color>
   <color name="tooltip">#B3E5E4E2</color>
+  <color name="transparent">#00000000</color>
 </resources>
