@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +37,10 @@ public class ChartViewModel extends ViewModel {
     private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
     private BehaviorSubject<Resolution> resolutionSubject = BehaviorSubject.create();
     private APIInterface service = APIClient.getClient().create(APIInterface.class);
+
+    private HashMap<Long, Long> memoVolumes = new HashMap<>();
+    private final IntColor colorRed = IntColorKt.toIntColor(Color.argb(204, 255, 82, 82));
+    private final IntColor colorGreen = IntColorKt.toIntColor(Color.argb(204, 0, 150, 136));
 
     @SuppressLint("DefaultLocale")
     public Observable<CombineChartData> getCandlestickDatas(String code) {
@@ -76,6 +81,47 @@ public class ChartViewModel extends ViewModel {
 
             switch (resolution.getId()) {
                 case 7:
+                    if (history.getT().size() > 0) {
+                        Calendar monday = Calendar.getInstance();
+                        monday.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+                        Long anchorTime = monday.getTime().getTime() / 1000;
+
+                        float sumO = 0;
+                        float sumC = history.getC().get(history.getT().size() - 1);
+                        float sumH = 0;
+                        float sumL = history.getL().get(history.getT().size() - 1);
+                        long sumV = 0;
+
+                        for (int i = history.getT().size() - 1; i >= 0; i--) {
+                            Long time = history.getT().get(i);
+                            if (time < anchorTime) {
+                                Time tTime = new Time.Utc(time);
+                                CandlestickData candlestickData = new CandlestickData(tTime, sumO, sumH, sumL, sumC, null, null, null);
+                                data.add(candlestickData);
+                                memoVolumes.put(tTime.getDate().getTime(), sumV);
+                                HistogramData temp = new HistogramData(tTime, sumV, sumC - sumO > 0 ? colorGreen :
+                                        colorRed);
+                                histogramData.add(temp);
+
+                                anchorTime = getAnchor(history.getT().get(i),Calendar.DATE,-7);
+                                sumC = history.getC().get(i);
+                                sumH = 0;
+                                sumL = history.getL().get(i);
+                                sumV = 0;
+
+                            } else {
+                                sumO = history.getO().get(i);
+                                if (sumH < history.getH().get(i))
+                                    sumH = history.getH().get(i);
+                                if (sumL > history.getL().get(i))
+                                    sumL = history.getL().get(i);
+                                sumV += history.getV().get(i);
+
+                            }
+                        }
+                        Collections.reverse(data);
+                        Collections.reverse(histogramData);
+                    }
 
                     break;
                 case 8:
@@ -98,9 +144,14 @@ public class ChartViewModel extends ViewModel {
         });
     }
 
-    private HashMap<Long, Long> memoVolumes = new HashMap<>();
-    private final IntColor colorRed = IntColorKt.toIntColor(Color.argb(204, 255, 82, 82));
-    private final IntColor colorGreen = IntColorKt.toIntColor(Color.argb(204, 0, 150, 136));
+    private long getAnchor(long timeUtc, int type, int t) {
+
+        Time tTime = new Time.Utc(timeUtc);
+        Calendar tCalendar = Calendar.getInstance();
+        tCalendar.setTime(tTime.getDate());
+        tCalendar.add(type, t);
+        return tCalendar.getTime().getTime() / 1000;
+    }
 
     public Observable<Resolution> getSelectedResolution() {
         return resolutionSubject;
