@@ -10,6 +10,8 @@ import com.skymapglobal.vnstock.models.History;
 import com.skymapglobal.vnstock.models.Resolution;
 import com.skymapglobal.vnstock.service.APIClient;
 import com.skymapglobal.vnstock.service.APIInterface;
+import com.skymapglobal.vnstock.utils.EMA;
+import com.skymapglobal.vnstock.utils.RSI;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColor;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColorKt;
 import com.tradingview.lightweightcharts.api.series.models.CandlestickData;
@@ -78,9 +80,6 @@ public class ChartViewModel extends ViewModel {
       Resolution resolution = pair.first;
       List<CandlestickData> data = new ArrayList<>();
       List<HistogramData> histogramData = new ArrayList<>();
-      List<LineData> ema20 = new ArrayList<>();
-      List<LineData> ema25 = new ArrayList<>();
-
       switch (resolution.getId()) {
         case 7:
         case 8:
@@ -152,15 +151,18 @@ public class ChartViewModel extends ViewModel {
             histogramData.add(temp);
           }
       }
-      ema20 = calculateEmaFromCandlestickData(data, 20, 2);
-      ema25 = calculateEmaFromCandlestickData(data, 25, 2);
+      List<LineData> ema20 = EMA.calculateEmaFromCandlestickData(data, 20, 2);
+      List<LineData> ema25 = EMA.calculateEmaFromCandlestickData(data, 25, 2);
+      List<LineData> rsi6 = RSI.calculateEmaFromCandlestickData(data, 6);
+      List<LineData> rsi14 = RSI.calculateEmaFromCandlestickData(data, 14);
+
       ema20.forEach(ema -> {
         memoEma20.put(ema.getTime(), ema.getValue());
       });
       ema25.forEach(ema -> {
         memoEma25.put(ema.getTime(), ema.getValue());
       });
-      return new CombineChartData(data, histogramData, ema20, ema25);
+      return new CombineChartData(data, histogramData, ema20, ema25, rsi6, rsi14);
     }).observeOn(AndroidSchedulers.mainThread()).map(r -> {
       loading.onNext(false);
       return r;
@@ -176,30 +178,6 @@ public class ChartViewModel extends ViewModel {
     tCalendar.set(Calendar.SECOND, 0);
     tCalendar.add(type, t);
     return tCalendar.getTime().getTime() / 1000;
-  }
-
-  private List<LineData> calculateEmaFromCandlestickData(List<CandlestickData> candlestickDataList,
-      Integer numDays, Integer smoothing) {
-    /*
-     ref: https://plainenglish.io/blog/how-to-calculate-the-ema-of-a-stock-with-python
-    */
-    List<LineData> result = new ArrayList<>();
-    float sum = 0;
-    for (int i = 0; i < candlestickDataList.size(); i++) {
-      if (i < numDays) {
-        sum += candlestickDataList.get(i).getClose();
-      } else {
-        if (result.size() == 0) {
-          result.add(new LineData(candlestickDataList.get(i - 1).getTime(), sum / numDays));
-        }
-        float cEma =
-            candlestickDataList.get(i).getClose() * smoothing / (1 + numDays)
-                + result.get(result.size() - 1).getValue() * (1
-                - smoothing / (1f + numDays));
-        result.add(new LineData(candlestickDataList.get(i).getTime(), cEma));
-      }
-    }
-    return result;
   }
 
   public Observable<Resolution> getSelectedResolution() {

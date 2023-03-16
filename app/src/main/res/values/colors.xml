@@ -12,6 +12,8 @@
   <color name="yellow">#fcb103</color>
   <color name="tooltip">#B3E5E4E2</color>
   <color name="transparent">#00000000</color>
-  <color name="ema20">#B22176</color>
-  <color name="ema25">#27CC53</color>
+  <color name="ema25">#B22176</color>
+  <color name="ema20">#27CC53</color>
+  <color name="rsi6">#FFE95A</color>
+  <color name="rsi14">#B22176</color>
 </resources>

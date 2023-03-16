@@ -59,12 +59,17 @@ public class ChartFragment extends Fragment implements ResolutionClickListener,
   private final HistogramSeriesOptions histogramSeriesOptions = new HistogramSeriesOptions();
   private final LineSeriesOptions ema20Options = new LineSeriesOptions();
   private final LineSeriesOptions ema25Options = new LineSeriesOptions();
+
+  private final LineSeriesOptions rsi6Options = new LineSeriesOptions();
+  private final LineSeriesOptions rsi14Options = new LineSeriesOptions();
   private List<Resolution> resolutions = new ArrayList<>();
 
   private SeriesApi candlestickSeriesApi;
   private SeriesApi histogramSeriesApi;
   private SeriesApi ema20SeriesApi;
   private SeriesApi ema25SeriesApi;
+  private SeriesApi rsi6SeriesApi;
+  private SeriesApi rsi14SeriesApi;
   private ChartsView chartsView;
   private LinearLayout tooltip;
   private TextView tTime;
@@ -283,6 +288,24 @@ public class ChartFragment extends Fragment implements ResolutionClickListener,
           } else {
             ema25SeriesApi.setData(data.getEma25());
           }
+          if (rsi6SeriesApi == null) {
+            chartsView.getApi().addLineSeries(rsi6Options, (seriesApi -> {
+              rsi6SeriesApi = seriesApi;
+              seriesApi.setData(data.getRsi6());
+              return null;
+            }));
+          } else {
+            rsi6SeriesApi.setData(data.getRsi6());
+          }
+          if (rsi14SeriesApi == null) {
+            chartsView.getApi().addLineSeries(rsi14Options, (seriesApi -> {
+              rsi14SeriesApi = seriesApi;
+              seriesApi.setData(data.getRsi14());
+              return null;
+            }));
+          } else {
+            rsi14SeriesApi.setData(data.getRsi14());
+          }
         }, Throwable::printStackTrace);
 
     Disposable l2 = viewModel.getSelectedResolution().subscribeOn(AndroidSchedulers.mainThread())
@@ -322,7 +345,7 @@ public class ChartFragment extends Fragment implements ResolutionClickListener,
     chartOptions.setCrosshair(crosshairOptions);
     PriceScaleOptions priceScaleOptions = new PriceScaleOptions();
     PriceScaleMargins priceScaleMargins = new PriceScaleMargins();
-    priceScaleMargins.setBottom(0.3f);
+    priceScaleMargins.setBottom(0.4f);
     priceScaleMargins.setTop(0.1f);
     priceScaleOptions.setScaleMargins(priceScaleMargins);
     chartOptions.setRightPriceScale(priceScaleOptions);
@@ -331,21 +354,42 @@ public class ChartFragment extends Fragment implements ResolutionClickListener,
 
     histogramSeriesOptions.setPriceFormat(
         PriceFormat.Companion.priceFormatBuiltIn(PriceFormat.Type.VOLUME, 1, 1f));
-    histogramSeriesOptions.setPriceScaleId(new PriceScaleId(""));
+    histogramSeriesOptions.setPriceScaleId(new PriceScaleId("histogram"));
     PriceScaleMargins histogramMargins = new PriceScaleMargins();
-    histogramMargins.setBottom(0f);
-    histogramMargins.setTop(0.7f);
+    histogramMargins.setBottom(0.2f);
+    histogramMargins.setTop(0.6f);
     histogramSeriesOptions.setScaleMargins(histogramMargins);
 
-    ema20Options.setColor(IntColorKt.toIntColor(Color.argb(204, 178, 33, 118)));
+    ema20Options.setColor(IntColorKt.toIntColor(Color.argb(204, 39, 204, 83)));
     ema20Options.setLineWidth(LineWidth.ONE);
     ema20Options.setPriceLineVisible(false);
     ema20Options.setLastValueVisible(false);
+    ema20Options.setCrosshairMarkerVisible(false);
 
-    ema25Options.setColor(IntColorKt.toIntColor(Color.argb(204, 39, 204, 83)));
+    ema25Options.setColor(IntColorKt.toIntColor(Color.argb(204, 178, 33, 118)));
     ema25Options.setLineWidth(LineWidth.ONE);
     ema25Options.setPriceLineVisible(false);
     ema25Options.setLastValueVisible(false);
+    ema25Options.setCrosshairMarkerVisible(false);
+
+    rsi6Options.setPriceScaleId(new PriceScaleId("rsi"));
+    rsi6Options.setColor(IntColorKt.toIntColor(Color.argb(204, 255, 233, 90)));
+    rsi6Options.setLineWidth(LineWidth.ONE);
+    rsi6Options.setPriceLineVisible(false);
+    rsi6Options.setLastValueVisible(false);
+    rsi6Options.setCrosshairMarkerVisible(false);
+    PriceScaleMargins rsiMargins = new PriceScaleMargins();
+    rsiMargins.setBottom(0f);
+    rsiMargins.setTop(0.8f);
+    rsi6Options.setScaleMargins(rsiMargins);
+
+    rsi14Options.setPriceScaleId(new PriceScaleId("rsi"));
+    rsi14Options.setColor(IntColorKt.toIntColor(Color.argb(204, 178, 33, 118)));
+    rsi14Options.setLineWidth(LineWidth.ONE);
+    rsi14Options.setPriceLineVisible(false);
+    rsi14Options.setLastValueVisible(false);
+    rsi14Options.setCrosshairMarkerVisible(false);
+    rsi14Options.setScaleMargins(rsiMargins);
   }
 
   private void createResolutions() {
