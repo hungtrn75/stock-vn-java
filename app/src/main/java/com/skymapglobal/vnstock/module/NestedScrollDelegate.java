@@ -2,6 +2,7 @@ package com.skymapglobal.vnstock.module;
 
 
 import android.content.Context;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -13,13 +14,15 @@ import com.tradingview.lightweightcharts.view.gesture.TouchDelegate;
 
 public class NestedScrollDelegate implements TouchDelegate {
     private Context context;
+    private NestedScrollListener listener;
     private Integer lastXDown = 0;
     private Double limitToScrollParent = 0.0;
     private Double scrollingPart = 0.8;
     private GestureDetector gestureDetector;
 
-    public NestedScrollDelegate(Context context) {
+    public NestedScrollDelegate(Context context, NestedScrollListener listener) {
         this.context = context;
+        this.listener = listener;
     }
 
     @Override

@@ -24,31 +24,20 @@
       android:layout_height="wrap_content"
       android:orientation="horizontal">
         <TextView
-          android:text="EMA(25): "
+          android:id="@+id/ema25"
+          android:text="289"
           android:textSize="13sp"
           android:textColor="@color/ema25"
           android:layout_marginStart="10dp"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"/>
-        <TextView
-          android:id="@+id/ema25"
-          android:text="289"
-          android:textSize="13sp"
-          android:textColor="@color/ema25"
-          android:layout_marginEnd="10dp"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"/>
-        <TextView
-          android:text="EMA(20): "
-          android:textSize="13sp"
-          android:textColor="@color/ema20"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"/>
+
         <TextView
           android:id="@+id/ema20"
           android:text="289"
           android:textSize="13sp"
           android:textColor="@color/ema20"
+          android:layout_marginStart="10dp"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"/>
     </LinearLayout>

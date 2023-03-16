@@ -24,16 +24,20 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class ChartViewModel extends ViewModel {
 
   private final BehaviorSubject<Resolution> resolutionSubject = BehaviorSubject.create();
+  private Resolution selectedResolution;
   private final BehaviorSubject<Boolean> loading = BehaviorSubject.create();
   private APIInterface service = APIClient.getClient().create(APIInterface.class);
 
   private final IntColor colorRed = IntColorKt.toIntColor(Color.argb(204, 255, 82, 82));
   private final IntColor colorGreen = IntColorKt.toIntColor(Color.argb(204, 0, 150, 136));
+  private HashMap<Time, Float> memoEma20 = new HashMap<>();
+  private HashMap<Time, Float> memoEma25 = new HashMap<>();
 
   @SuppressLint("DefaultLocale")
   public Observable<CombineChartData> getCandlestickDatas(String code) {
@@ -127,7 +131,6 @@ public class ChartViewModel extends ViewModel {
                   sumL = history.getL().get(i);
                 }
                 sumV += history.getV().get(i);
-
               }
             }
             Collections.reverse(data);
@@ -151,6 +154,12 @@ public class ChartViewModel extends ViewModel {
       }
       ema20 = calculateEmaFromCandlestickData(data, 20, 2);
       ema25 = calculateEmaFromCandlestickData(data, 25, 2);
+      ema20.forEach(ema -> {
+        memoEma20.put(ema.getTime(), ema.getValue());
+      });
+      ema25.forEach(ema -> {
+        memoEma25.put(ema.getTime(), ema.getValue());
+      });
       return new CombineChartData(data, histogramData, ema20, ema25);
     }).observeOn(AndroidSchedulers.mainThread()).map(r -> {
       loading.onNext(false);
@@ -201,7 +210,26 @@ public class ChartViewModel extends ViewModel {
     return loading;
   }
 
+  public Resolution getMemoResolution() {
+    return selectedResolution;
+  }
+
+  public Object getEma20WithLogicalTime(Time time) {
+    if (memoEma20.containsKey(time)) {
+      return memoEma20.get(time);
+    }
+    return null;
+  }
+
+  public Object getEma25WithLogicalTime(Time time) {
+    if (memoEma25.containsKey(time)) {
+      return memoEma25.get(time);
+    }
+    return null;
+  }
+
   public void setResolution(Resolution resolution) {
+    selectedResolution = resolution;
     resolutionSubject.onNext(resolution);
   }
 }

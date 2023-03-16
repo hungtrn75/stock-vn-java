@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.models.Resolution;
 import com.skymapglobal.vnstock.module.NestedScrollDelegate;
+import com.skymapglobal.vnstock.module.NestedScrollListener;
 import com.skymapglobal.vnstock.utils.Transform;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColorKt;
 import com.tradingview.lightweightcharts.api.interfaces.SeriesApi;
@@ -29,6 +30,7 @@ import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptio
 import com.tradingview.lightweightcharts.api.options.models.LineSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleOptions;
+import com.tradingview.lightweightcharts.api.series.common.SeriesData;
 import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode;
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth;
 import com.tradingview.lightweightcharts.api.series.models.BarPrice;
@@ -43,11 +45,13 @@ import io.reactivex.disposables.Disposable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ChartFragment extends Fragment implements ResolutionClickListener {
+public class ChartFragment extends Fragment implements ResolutionClickListener,
+    NestedScrollListener {
 
   private String code;
   private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
@@ -56,7 +60,11 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
   private final LineSeriesOptions ema20Options = new LineSeriesOptions();
   private final LineSeriesOptions ema25Options = new LineSeriesOptions();
   private List<Resolution> resolutions = new ArrayList<>();
-  private Set<SeriesApi> seriesApis = new HashSet<>();
+
+  private SeriesApi candlestickSeriesApi;
+  private SeriesApi histogramSeriesApi;
+  private SeriesApi ema20SeriesApi;
+  private SeriesApi ema25SeriesApi;
   private ChartsView chartsView;
   private LinearLayout tooltip;
   private TextView tTime;
@@ -70,6 +78,8 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
   private LinearLayout emaContainer;
   private TextView ema20;
   private TextView ema25;
+  private String memoLastEma20;
+  private String memoLastEma25;
 
   private RecyclerView resolutionList;
   private ResolutionAdapter resolutionAdapter;
@@ -117,7 +127,7 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
 
   private void setupViews() {
     chartsView = requireView().findViewById(R.id.charts_view);
-    chartsView.addTouchDelegate(new NestedScrollDelegate(getContext()));
+    chartsView.addTouchDelegate(new NestedScrollDelegate(getContext(), this));
 
     tooltip = requireView().findViewById(R.id.tooltip);
     tTime = requireView().findViewById(R.id.tTime);
@@ -150,10 +160,15 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
           Time.Utc businessDay = (Time.Utc) mouseEventParams.getTime();
           Calendar calendar = Calendar.getInstance();
           calendar.setTime(businessDay.getDate());
-          String time = String.format("%d-%d-%d %d-%d-%d", calendar.get(Calendar.YEAR),
-              calendar.get(Calendar.MONTH) + 1,
-              calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY),
-              calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND));
+          String time;
+          if (viewModel.getMemoResolution() == null || viewModel.getMemoResolution().getId() > 5) {
+            time = String.format("%d-%d-%d", calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
+          } else {
+            time = String.format("%d-%d-%d %d:%d", calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
+                calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE));
+          }
           BarPrice price = barPrices.get(0).getPrices();
 
           tTime.setText(time);
@@ -183,54 +198,91 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
           if (barPrices.size() > 3) {
             float ema20Value = barPrices.get(2).getPrices().getValue();
             float ema25Value = barPrices.get(3).getPrices().getValue();
-            ema20.setText(String.format("%.2f", ema20Value));
-            ema25.setText(String.format("%.2f", ema25Value));
+            ema20.setText(String.format("EMA(20): %.2f", ema20Value));
+            ema25.setText(String.format("EMA(25): %.2f", ema25Value));
           }
         } else {
           tooltip.setVisibility(View.GONE);
+          if (memoLastEma25 != null && memoLastEma20 != null) {
+            emaContainer.setVisibility(View.VISIBLE);
+            ema20.setText(memoLastEma20);
+            ema25.setText(memoLastEma25);
+          } else {
+            emaContainer.setVisibility(View.INVISIBLE);
+          }
         }
       } else {
         tooltip.setVisibility(View.GONE);
       }
-
       return null;
     }));
 
+    chartsView.getApi().getTimeScale().subscribeVisibleTimeRangeChange((logicalRange) -> {
+      if (logicalRange != null) {
+        Object ema20Value = viewModel.getEma20WithLogicalTime(logicalRange.getTo());
+        Object ema25Value = viewModel.getEma25WithLogicalTime(logicalRange.getTo());
+        if (ema20Value != null || ema25Value != null) {
+          emaContainer.setVisibility(View.VISIBLE);
+          if (ema20Value != null) {
+            ema20.setVisibility(View.VISIBLE);
+            memoLastEma20 = String.format("EMA(20): %.2f", ema20Value);
+            ema20.setText(memoLastEma20);
+          } else {
+            ema20.setVisibility(View.GONE);
+          }
+          if (ema25Value != null) {
+            ema25.setVisibility(View.VISIBLE);
+            memoLastEma25 = String.format("EMA(25): %.2f", ema25Value);
+            ema25.setText(memoLastEma25);
+          } else {
+            ema25.setVisibility(View.GONE);
+          }
+        } else {
+          emaContainer.setVisibility(View.INVISIBLE);
+        }
+      }
+      return null;
+    });
+
     Disposable l1 = viewModel.getCandlestickDatas(code).subscribeOn(AndroidSchedulers.mainThread())
         .subscribe(data -> {
-          if (data.getEma20().size() > 0 && data.getEma25().size() > 0) {
-            emaContainer.setVisibility(View.VISIBLE);
-            ema20.setText(
-                String.format("%.2f", data.getEma20().get(data.getEma20().size() - 1).getValue()));
-            ema25.setText(
-                String.format("%.2f", data.getEma25().get(data.getEma25().size() - 1).getValue()));
+          if (candlestickSeriesApi == null) {
+            chartsView.getApi().addCandlestickSeries(candlestickSeriesOptions, (seriesApi -> {
+              candlestickSeriesApi = seriesApi;
+              seriesApi.setData(data.getCandlestickDataList());
+              return null;
+            }));
           } else {
-            emaContainer.setVisibility(View.INVISIBLE);
+            candlestickSeriesApi.setData(data.getCandlestickDataList());
           }
-          seriesApis.forEach(s -> chartsView.getApi().removeSeries(s, () -> {
-            return null;
-          }));
-          seriesApis.clear();
-          chartsView.getApi().addCandlestickSeries(candlestickSeriesOptions, (seriesApi -> {
-            seriesApi.setData(data.getCandlestickDataList());
-            seriesApis.add(seriesApi);
-            return null;
-          }));
-          chartsView.getApi().addHistogramSeries(histogramSeriesOptions, (seriesApi -> {
-            seriesApis.add(seriesApi);
-            seriesApi.setData(data.getHistogramDataList());
-            return null;
-          }));
-          chartsView.getApi().addLineSeries(ema20Options, (seriesApi -> {
-            seriesApis.add(seriesApi);
-            seriesApi.setData(data.getEma20());
-            return null;
-          }));
-          chartsView.getApi().addLineSeries(ema25Options, (seriesApi -> {
-            seriesApis.add(seriesApi);
-            seriesApi.setData(data.getEma25());
-            return null;
-          }));
+          if (histogramSeriesApi == null) {
+            chartsView.getApi().addHistogramSeries(histogramSeriesOptions, (seriesApi -> {
+              histogramSeriesApi = seriesApi;
+              seriesApi.setData(data.getHistogramDataList());
+              return null;
+            }));
+          } else {
+            histogramSeriesApi.setData(data.getHistogramDataList());
+          }
+
+          if (ema20SeriesApi == null) {
+            chartsView.getApi().addLineSeries(ema20Options, (seriesApi -> {
+              ema20SeriesApi = seriesApi;
+              seriesApi.setData(data.getEma20());
+              return null;
+            }));
+          } else {
+            ema20SeriesApi.setData(data.getEma20());
+          }
+          if (ema25SeriesApi == null) {
+            chartsView.getApi().addLineSeries(ema25Options, (seriesApi -> {
+              ema25SeriesApi = seriesApi;
+              seriesApi.setData(data.getEma25());
+              return null;
+            }));
+          } else {
+            ema25SeriesApi.setData(data.getEma25());
+          }
         }, Throwable::printStackTrace);
 
     Disposable l2 = viewModel.getSelectedResolution().subscribeOn(AndroidSchedulers.mainThread())
@@ -291,9 +343,13 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
 
     ema20Options.setColor(IntColorKt.toIntColor(Color.argb(204, 178, 33, 118)));
     ema20Options.setLineWidth(LineWidth.ONE);
+    ema20Options.setPriceLineVisible(false);
+    ema20Options.setLastValueVisible(false);
 
     ema25Options.setColor(IntColorKt.toIntColor(Color.argb(204, 39, 204, 83)));
     ema25Options.setLineWidth(LineWidth.ONE);
+    ema25Options.setPriceLineVisible(false);
+    ema25Options.setLastValueVisible(false);
   }
 
   private void createResolutions() {
@@ -316,5 +372,10 @@ public class ChartFragment extends Fragment implements ResolutionClickListener {
   @Override
   public void onResolutionClickListener(Resolution resolution, Integer position) {
     viewModel.setResolution(resolution);
+  }
+
+  @Override
+  public void onHorizontalScroll(float x) {
+    Log.e("onHorizontalScroll", "scroll:" + x);
   }
 }
