@@ -21,6 +21,7 @@ import com.skymapglobal.vnstock.models.Resolution;
 import com.skymapglobal.vnstock.module.NestedScrollDelegate;
 import com.skymapglobal.vnstock.module.NestedScrollListener;
 import com.skymapglobal.vnstock.utils.Transform;
+import com.skymapglobal.vnstock.utils.Tuple.T4;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColorKt;
 import com.tradingview.lightweightcharts.api.interfaces.SeriesApi;
 import com.tradingview.lightweightcharts.api.options.models.CandlestickSeriesOptions;
@@ -30,7 +31,6 @@ import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptio
 import com.tradingview.lightweightcharts.api.options.models.LineSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleOptions;
-import com.tradingview.lightweightcharts.api.series.common.SeriesData;
 import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode;
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth;
 import com.tradingview.lightweightcharts.api.series.models.BarPrice;
@@ -45,10 +45,7 @@ import io.reactivex.disposables.Disposable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class ChartFragment extends Fragment implements ResolutionClickListener,
     NestedScrollListener {
@@ -224,8 +221,13 @@ public class ChartFragment extends Fragment implements ResolutionClickListener,
 
     chartsView.getApi().getTimeScale().subscribeVisibleTimeRangeChange((logicalRange) -> {
       if (logicalRange != null) {
-        Object ema20Value = viewModel.getEma20WithLogicalTime(logicalRange.getTo());
-        Object ema25Value = viewModel.getEma25WithLogicalTime(logicalRange.getTo());
+        T4<Object, Object, Object, Object> result = viewModel.getIndexWithTime(
+            logicalRange.getTo());
+        Object ema20Value = result.getFirst();
+        Object ema25Value = result.getSecond();
+        Object rsi6Value = result.getThird();
+        Object rsi14Value = result.getFour();
+
         if (ema20Value != null || ema25Value != null) {
           emaContainer.setVisibility(View.VISIBLE);
           if (ema20Value != null) {

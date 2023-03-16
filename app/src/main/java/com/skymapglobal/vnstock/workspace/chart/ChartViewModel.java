@@ -12,6 +12,7 @@ import com.skymapglobal.vnstock.service.APIClient;
 import com.skymapglobal.vnstock.service.APIInterface;
 import com.skymapglobal.vnstock.utils.EMA;
 import com.skymapglobal.vnstock.utils.RSI;
+import com.skymapglobal.vnstock.utils.Tuple;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColor;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColorKt;
 import com.tradingview.lightweightcharts.api.series.models.CandlestickData;
@@ -28,6 +29,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import kotlin.Triple;
 
 public class ChartViewModel extends ViewModel {
 
@@ -40,6 +42,8 @@ public class ChartViewModel extends ViewModel {
   private final IntColor colorGreen = IntColorKt.toIntColor(Color.argb(204, 0, 150, 136));
   private HashMap<Time, Float> memoEma20 = new HashMap<>();
   private HashMap<Time, Float> memoEma25 = new HashMap<>();
+  private HashMap<Time, Float> memoRsi6 = new HashMap<>();
+  private HashMap<Time, Float> memoRsi14 = new HashMap<>();
 
   @SuppressLint("DefaultLocale")
   public Observable<CombineChartData> getCandlestickDatas(String code) {
@@ -162,6 +166,12 @@ public class ChartViewModel extends ViewModel {
       ema25.forEach(ema -> {
         memoEma25.put(ema.getTime(), ema.getValue());
       });
+      rsi6.forEach(rsi -> {
+        memoRsi6.put(rsi.getTime(), rsi.getValue());
+      });
+      rsi14.forEach(rsi -> {
+        memoRsi14.put(rsi.getTime(), rsi.getValue());
+      });
       return new CombineChartData(data, histogramData, ema20, ema25, rsi6, rsi14);
     }).observeOn(AndroidSchedulers.mainThread()).map(r -> {
       loading.onNext(false);
@@ -192,18 +202,9 @@ public class ChartViewModel extends ViewModel {
     return selectedResolution;
   }
 
-  public Object getEma20WithLogicalTime(Time time) {
-    if (memoEma20.containsKey(time)) {
-      return memoEma20.get(time);
-    }
-    return null;
-  }
-
-  public Object getEma25WithLogicalTime(Time time) {
-    if (memoEma25.containsKey(time)) {
-      return memoEma25.get(time);
-    }
-    return null;
+  public Tuple.T4<Object, Object, Object, Object> getIndexWithTime(Time time) {
+    return new Tuple.T4<>(memoEma20.getOrDefault(time, null), memoEma25.getOrDefault(time, null),
+        memoRsi6.getOrDefault(time, null), memoRsi14.getOrDefault(time, null));
   }
 
   public void setResolution(Resolution resolution) {
