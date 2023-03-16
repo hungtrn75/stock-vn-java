@@ -2,7 +2,6 @@ package com.skymapglobal.vnstock.models;
 
 import com.tradingview.lightweightcharts.api.series.models.CandlestickData;
 import com.tradingview.lightweightcharts.api.series.models.HistogramData;
-
 import com.tradingview.lightweightcharts.api.series.models.LineData;
 import java.util.List;
 

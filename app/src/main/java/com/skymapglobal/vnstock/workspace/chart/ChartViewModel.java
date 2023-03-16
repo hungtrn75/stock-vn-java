@@ -4,9 +4,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.Pair;
-
 import androidx.lifecycle.ViewModel;
-
 import com.skymapglobal.vnstock.models.CombineChartData;
 import com.skymapglobal.vnstock.models.History;
 import com.skymapglobal.vnstock.models.Resolution;
@@ -18,23 +16,18 @@ import com.tradingview.lightweightcharts.api.series.models.CandlestickData;
 import com.tradingview.lightweightcharts.api.series.models.HistogramData;
 import com.tradingview.lightweightcharts.api.series.models.LineData;
 import com.tradingview.lightweightcharts.api.series.models.Time;
-
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.BehaviorSubject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-
-import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
 
 public class ChartViewModel extends ViewModel {
 
-  private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
   private final BehaviorSubject<Resolution> resolutionSubject = BehaviorSubject.create();
   private final BehaviorSubject<Boolean> loading = BehaviorSubject.create();
   private APIInterface service = APIClient.getClient().create(APIInterface.class);
@@ -48,7 +41,6 @@ public class ChartViewModel extends ViewModel {
       loading.onNext(true);
       return r;
     }).observeOn(Schedulers.io()).switchMap(res -> {
-
       Date toDate = new Date();
       Calendar fromCalendar = Calendar.getInstance();
       Long to = toDate.getTime() / 1000;
@@ -80,7 +72,6 @@ public class ChartViewModel extends ViewModel {
     }).map(pair -> {
       History history = pair.second;
       Resolution resolution = pair.first;
-      Log.e("getCandlestickDatas", history.getT().size() + "");
       List<CandlestickData> data = new ArrayList<>();
       List<HistogramData> histogramData = new ArrayList<>();
       List<LineData> ema20 = new ArrayList<>();
@@ -141,6 +132,7 @@ public class ChartViewModel extends ViewModel {
             }
             Collections.reverse(data);
             Collections.reverse(histogramData);
+
           }
 
           break;
@@ -156,9 +148,9 @@ public class ChartViewModel extends ViewModel {
                     colorRed);
             histogramData.add(temp);
           }
-          ema20 = calculateEma(history, 20, 2);
-          ema25 = calculateEma(history, 25, 2);
       }
+      ema20 = calculateEmaFromCandlestickData(data, 20, 2);
+      ema25 = calculateEmaFromCandlestickData(data, 25, 2);
       return new CombineChartData(data, histogramData, ema20, ema25);
     }).observeOn(AndroidSchedulers.mainThread()).map(r -> {
       loading.onNext(false);
@@ -177,24 +169,25 @@ public class ChartViewModel extends ViewModel {
     return tCalendar.getTime().getTime() / 1000;
   }
 
-  private List<LineData> calculateEma(History history, Integer numDays, Integer smoothing) {
+  private List<LineData> calculateEmaFromCandlestickData(List<CandlestickData> candlestickDataList,
+      Integer numDays, Integer smoothing) {
     /*
      ref: https://plainenglish.io/blog/how-to-calculate-the-ema-of-a-stock-with-python
     */
     List<LineData> result = new ArrayList<>();
     float sum = 0;
-    for (int i = 0; i < history.getC().size(); i++) {
+    for (int i = 0; i < candlestickDataList.size(); i++) {
       if (i < numDays) {
-        sum += history.getC().get(i);
+        sum += candlestickDataList.get(i).getClose();
       } else {
         if (result.size() == 0) {
-          result.add(new LineData(new Time.Utc(history.getT().get(i - 1)), sum / numDays));
+          result.add(new LineData(candlestickDataList.get(i - 1).getTime(), sum / numDays));
         }
         float cEma =
-            history.getC().get(i) * smoothing / (1 + numDays)
+            candlestickDataList.get(i).getClose() * smoothing / (1 + numDays)
                 + result.get(result.size() - 1).getValue() * (1
                 - smoothing / (1f + numDays));
-        result.add(new LineData(new Time.Utc(history.getT().get(i)), cEma));
+        result.add(new LineData(candlestickDataList.get(i).getTime(), cEma));
       }
     }
     return result;
@@ -206,12 +199,6 @@ public class ChartViewModel extends ViewModel {
 
   public Observable<Boolean> getLoadingObs() {
     return loading;
-  }
-
-  @Override
-  protected void onCleared() {
-    mCompositeDisposable.clear();
-    super.onCleared();
   }
 
   public void setResolution(Resolution resolution) {

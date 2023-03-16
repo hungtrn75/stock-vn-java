@@ -3,39 +3,29 @@ package com.skymapglobal.vnstock.workspace.chart;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
-
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import androidx.annotation.ColorInt;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
 import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.models.Resolution;
 import com.skymapglobal.vnstock.module.NestedScrollDelegate;
 import com.skymapglobal.vnstock.utils.Transform;
-import com.skymapglobal.vnstock.workspace.home.HomeViewModel;
-import com.tradingview.lightweightcharts.api.chart.models.color.Colorable.ColorAdapter;
-import com.tradingview.lightweightcharts.api.chart.models.color.ColorableKt;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColorKt;
-import com.tradingview.lightweightcharts.api.interfaces.ChartApi;
 import com.tradingview.lightweightcharts.api.interfaces.SeriesApi;
-import com.tradingview.lightweightcharts.api.options.models.AreaSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.CandlestickSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.ChartOptions;
 import com.tradingview.lightweightcharts.api.options.models.CrosshairOptions;
 import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptions;
-import com.tradingview.lightweightcharts.api.options.models.LayoutOptions;
 import com.tradingview.lightweightcharts.api.options.models.LineSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleOptions;
@@ -43,23 +33,19 @@ import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode;
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth;
 import com.tradingview.lightweightcharts.api.series.models.BarPrice;
 import com.tradingview.lightweightcharts.api.series.models.BarPrices;
-import com.tradingview.lightweightcharts.api.series.models.MouseEventParams;
 import com.tradingview.lightweightcharts.api.series.models.PriceFormat;
 import com.tradingview.lightweightcharts.api.series.models.PriceScaleId;
 import com.tradingview.lightweightcharts.api.series.models.Time;
 import com.tradingview.lightweightcharts.view.ChartsView;
-
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class ChartFragment extends Fragment implements ResolutionClickListener {
 
