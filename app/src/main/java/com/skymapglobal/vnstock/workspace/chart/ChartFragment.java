@@ -327,19 +327,15 @@ public class ChartFragment extends Fragment implements ResolutionClickListener,
     priceScaleOptions.setScaleMargins(priceScaleMargins);
     chartOptions.setRightPriceScale(priceScaleOptions);
 
-    PriceScaleOptions leftPriceScaleOptions = new PriceScaleOptions();
-    PriceScaleMargins leftPriceScaleMargins = new PriceScaleMargins();
-    leftPriceScaleMargins.setBottom(0f);
-    leftPriceScaleMargins.setTop(0.8f);
-    leftPriceScaleOptions.setVisible(true);
-    leftPriceScaleOptions.setScaleMargins(leftPriceScaleMargins);
-
-    chartOptions.setLeftPriceScale(leftPriceScaleOptions);
     chartsView.getApi().applyOptions(chartOptions);
 
     histogramSeriesOptions.setPriceFormat(
         PriceFormat.Companion.priceFormatBuiltIn(PriceFormat.Type.VOLUME, 1, 1f));
-    histogramSeriesOptions.setPriceScaleId(new PriceScaleId("left"));
+    histogramSeriesOptions.setPriceScaleId(new PriceScaleId(""));
+    PriceScaleMargins histogramMargins = new PriceScaleMargins();
+    histogramMargins.setBottom(0f);
+    histogramMargins.setTop(0.7f);
+    histogramSeriesOptions.setScaleMargins(histogramMargins);
 
     ema20Options.setColor(IntColorKt.toIntColor(Color.argb(204, 178, 33, 118)));
     ema20Options.setLineWidth(LineWidth.ONE);
