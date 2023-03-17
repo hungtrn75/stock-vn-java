@@ -162,11 +162,14 @@ public class ChartViewModel extends ViewModel {
           }
       }
       EMA ema20O = new EMA(20);
-      EMA ema25O = new EMA(20);
+      EMA ema25O = new EMA(25);
+      RSI rsi6O = new RSI(6);
+      RSI rsi14O = new RSI(14);
+
       List<LineData> ema20 = ema20O.calculateEmaFromCandlestickData(data, 2);
       List<LineData> ema25 = ema25O.calculateEmaFromCandlestickData(data, 2);
-      List<LineData> rsi6 = RSI.calculateEmaFromCandlestickData(data, 6);
-      List<LineData> rsi14 = RSI.calculateEmaFromCandlestickData(data, 14);
+      List<LineData> rsi6 = rsi6O.calculateEmaFromCandlestickData(data, 2);
+      List<LineData> rsi14 = rsi14O.calculateEmaFromCandlestickData(data, 2);
 
       memoEma20.clear();
       memoEma25.clear();

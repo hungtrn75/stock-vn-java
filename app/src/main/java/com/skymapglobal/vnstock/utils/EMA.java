@@ -73,27 +73,6 @@ public class EMA {
     }
   }
 
-  public List<Float> count(List<Float> prizes, Integer smoothing) {
-    List<Float> result = new ArrayList<>();
-    float sum = 0;
-    for (int i = 0; i < prizes.size(); i++) {
-      if (i < period) {
-        sum += prizes.get(i);
-      } else {
-        if (result.size() == 0) {
-          result.add(sum / period);
-        }
-        float cEma =
-            prizes.get(i) * smoothing / (1 + period)
-                + result.get(result.size() - 1) * (1
-                - smoothing / (1f + period));
-        result.add(cEma);
-      }
-    }
-    return result;
-  }
-
-
   /**
    * Count EMA for one day
    *
@@ -119,31 +98,6 @@ public class EMA {
       result.add(new LineData(candlestickDataList.get(i + period).getTime(), (float) emas[i]));
     }
 
-    return result;
-  }
-
-  public static List<LineData> calculateEmaFromCandlestickData(
-      List<CandlestickData> candlestickDataList,
-      Integer period, Integer smoothing) {
-    /*
-     * https://plainenglish.io/blog/how-to-calculate-the-ema-of-a-stock-with-python
-     * */
-    List<LineData> result = new ArrayList<>();
-    float sum = 0;
-    for (int i = 0; i < candlestickDataList.size(); i++) {
-      if (i < period) {
-        sum += candlestickDataList.get(i).getClose();
-      } else {
-        if (result.size() == 0) {
-          result.add(new LineData(candlestickDataList.get(i - 1).getTime(), sum / period));
-        }
-        float cEma =
-            candlestickDataList.get(i).getClose() * smoothing / (1 + period)
-                + result.get(result.size() - 1).getValue() * (1
-                - smoothing / (1f + period));
-        result.add(new LineData(candlestickDataList.get(i).getTime(), cEma));
-      }
-    }
     return result;
   }
 }

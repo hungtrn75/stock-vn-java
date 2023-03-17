@@ -8,39 +8,63 @@ import java.util.List;
 
 public class RSI {
 
-  public static List<LineData> calculateEmaFromCandlestickData(
-      List<CandlestickData> candlestickDataList, Integer period) {
-    /*
-     * https://github.com/piomin/analyzer/blob/master/analyzer/analyzer-alg/src/main/java/pl/stock/algorithm/core/RSI.java
-     * */
-    List<LineData> result = new ArrayList<>();
-    final double[] up = new double[candlestickDataList.size() - 1];
-    final double[] down = new double[candlestickDataList.size() - 1];
-    for (int i = 0; i < candlestickDataList.size() - 1; i++) {
-      float from = candlestickDataList.get(i).getClose();
-      float to = candlestickDataList.get(i + 1).getClose();
-      if (from > to) {
-        up[i] = from - to;
+  private int period;
+
+  // EMA for 2*period-1 period in RSI formula
+  private EMA ema;
+
+  /**
+   * Constructor
+   *
+   * @param period - set period
+   */
+  public RSI(final int period) {
+    this.period = period;
+    this.ema = new EMA(2 * period - 1);
+  }
+
+  public double[] calculate(final double[] prizes, int smoothing) {
+    final double[] up = new double[prizes.length - 1];
+    final double[] down = new double[prizes.length - 1];
+    for (int i = 0; i < prizes.length - 1; i++) {
+      if (prizes[i] > prizes[i + 1]) {
+        up[i] = prizes[i] - prizes[i + 1];
         down[i] = 0;
       }
-      if (from < to) {
-        down[i] = Math.abs(from - to);
+      if (prizes[i] < prizes[i + 1]) {
+        down[i] = Math.abs(prizes[i] - prizes[i + 1]);
         up[i] = 0;
       }
     }
-    final int emaLength = candlestickDataList.size() - 2 * period;
 
+    // count EMA for up and down tables
+    final int emaLength = prizes.length - 2 * period;
+    double[] rsis = new double[0];
     if (emaLength > 0) {
-      EMA ema = new EMA(2 * period - 1);
       final double[] emus = new double[emaLength];
       final double[] emds = new double[emaLength];
-      ema.count(up, 0, emus);
-      ema.count(down, 0, emds);
+      ema.calculate(up, smoothing, emus);
+      ema.calculate(down, smoothing, emds);
+
       // count RSI with RSI recursive formula
-      for (int i = 0; i < emaLength; i++) {
-        result.add(new LineData(candlestickDataList.get(i + 2 * period).getTime(),
-            100 - (100 / (float) (1 + emus[i] / emds[i]))));
+      rsis = new double[emaLength];
+      for (int i = 0; i < rsis.length; i++) {
+        rsis[i] = 100 - (100 / (double) (1 + emus[i] / emds[i]));
       }
+    }
+
+    return rsis;
+  }
+
+  public List<LineData> calculateEmaFromCandlestickData(List<CandlestickData> candlestickDataList,
+      Integer smoothing) {
+    List<LineData> result = new ArrayList<>();
+    double[] rsis = calculate(
+        candlestickDataList.stream().mapToDouble(CandlestickData::getClose).toArray(), smoothing);
+
+    for (int i = 0; i < rsis.length; i++) {
+      result.add(
+          new LineData(candlestickDataList.get(i + 2 * period).getTime(), (float) rsis[i]));
     }
     return result;
   }
