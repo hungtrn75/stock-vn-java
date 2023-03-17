@@ -6,32 +6,7 @@
   android:layout_height="match_parent"
   tools:context=".ListActivity">
 
-  <ProgressBar
-    android:id="@+id/progressBar"
-    android:layout_width="30dp"
-    android:layout_height="30dp"
-    android:indeterminate="true"
-    android:indeterminateTint="@color/purple_500"
-    android:indeterminateTintMode="src_atop"
-    android:visibility="gone"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    tools:visibility="visible" />
 
-  <androidx.recyclerview.widget.RecyclerView
-    android:id="@+id/searchRV"
-    android:layout_width="0dp"
-    android:layout_height="0dp"
-    android:background="@color/white"
-    android:visibility="invisible"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    tools:listitem="@layout/item_stock"
-    tools:visibility="gone" />
 
   <androidx.recyclerview.widget.RecyclerView
     android:id="@+id/marketRV"
@@ -65,4 +40,30 @@
     app:layout_constraintTop_toBottomOf="@+id/marketRV"
     app:tabMode="scrollable"
     app:tabTextAppearance="@style/TabItemTextAppearance" />
+  <ProgressBar
+    android:id="@+id/progressBar"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:indeterminate="true"
+    android:indeterminateTint="@color/purple_500"
+    android:indeterminateTintMode="src_atop"
+    android:visibility="gone"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:visibility="visible" />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/searchRV"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:background="@color/white"
+    android:visibility="invisible"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:listitem="@layout/item_stock"
+    tools:visibility="gone" />
 </androidx.constraintlayout.widget.ConstraintLayout>
