@@ -36,7 +36,6 @@ public class RSI {
       final double[] emds = new double[emaLength];
       ema.count(up, 0, emus);
       ema.count(down, 0, emds);
-      Log.e("sadasda", candlestickDataList.size() + "/" + emus.length);
       // count RSI with RSI recursive formula
       for (int i = 0; i < emaLength; i++) {
         result.add(new LineData(candlestickDataList.get(i + 2 * period).getTime(),
