@@ -23,6 +23,9 @@ public class RSI {
     this.ema = new EMA(2 * period - 1);
   }
 
+  /*
+   * https://github.com/piomin/analyzer/blob/master/analyzer/analyzer-alg/src/main/java/pl/stock/algorithm/core/RSI.java
+   * */
   public double[] calculate(final double[] prizes, int smoothing) {
     final double[] up = new double[prizes.length - 1];
     final double[] down = new double[prizes.length - 1];

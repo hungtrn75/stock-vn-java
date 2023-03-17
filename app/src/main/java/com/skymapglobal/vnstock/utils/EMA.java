@@ -86,6 +86,9 @@ public class EMA {
     return actualEma;
   }
 
+  /*
+   * https://plainenglish.io/blog/how-to-calculate-the-ema-of-a-stock-with-python
+   * */
   public List<LineData> calculateEmaFromCandlestickData(List<CandlestickData> candlestickDataList,
       Integer smoothing) {
     double[] emas = new double[candlestickDataList.size() - period];
