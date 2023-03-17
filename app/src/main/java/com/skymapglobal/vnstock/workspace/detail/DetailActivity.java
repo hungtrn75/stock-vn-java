@@ -1,6 +1,7 @@
 package com.skymapglobal.vnstock.workspace.detail;
 
 import android.annotation.SuppressLint;
+
 import android.content.Intent;
 import android.util.Log;
 
@@ -41,7 +42,7 @@ public class DetailActivity extends AppCompatActivity {
         viewPager2 = findViewById(R.id.detailViewPager);
         tabLayout = findViewById(R.id.detailTabLayout);
 
-        detailPagerAdapter = new DetailPagerAdapter(this, tabs, stockItem.getCode());
+        detailPagerAdapter = new DetailPagerAdapter(this, tabs, stockItem.getCode(), stockItem);
         viewPager2.setAdapter(detailPagerAdapter);
 
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager2,

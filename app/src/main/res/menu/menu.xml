@@ -6,7 +6,8 @@
     android:title="Search"
     android:icon="@drawable/search"
     app:actionViewClass="androidx.appcompat.widget.SearchView"
-    app:showAsAction="always|collapseActionView" />
+      app:showAsAction="always|collapseActionView"
+    />
   <item
     android:id="@+id/action_sort"
     android:title="Sort"

@@ -49,8 +49,8 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> 
       holder.price.setTextColor(mContext.getColor(R.color.red));
       holder.rate.setText(String.valueOf(String.format("%.2f",item.getRatio()))+"%");
     }else if(item.getRatio() == 0){
-      holder.rate.setBackground(mContext.getDrawable(R.drawable.ic_border_yellow));
-      holder.price.setTextColor(mContext.getColor(R.color.yellow));
+      holder.rate.setBackground(mContext.getDrawable(R.drawable.ic_border_orange));
+      holder.price.setTextColor(mContext.getColor(R.color.orange));
       holder.rate.setText(String.valueOf(String.format("%.2f",item.getRatio()))+"%");
     }else{
       holder.rate.setBackground(mContext.getDrawable(R.drawable.ic_border));
@@ -59,8 +59,8 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.ViewHolder> 
     }
 
     holder.des.setText(item.getName());
-    holder.vol.setText("Vol:     "+ String.valueOf(item.getVol()));
-    holder.chg.setText("Chg:     "+String.valueOf(item.getChg()));
+    holder.vol.setText("Vol:     "+ item.getVol());
+    holder.chg.setText("Chg:     "+ item.getChg());
     holder.itemView.setOnClickListener(v->{
       listener.onItemClickListener(item,position);
     });

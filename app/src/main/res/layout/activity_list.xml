@@ -4,9 +4,7 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context=".ListActivity">
-
-
+  tools:context=".view.ListActivity">
 
   <androidx.recyclerview.widget.RecyclerView
     android:id="@+id/marketRV"
@@ -16,7 +14,6 @@
     tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
     tools:listitem="@layout/item_market"
     tools:orientation="horizontal"
-
     />
 
   <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
