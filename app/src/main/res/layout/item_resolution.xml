@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/itemResolutionContainer"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/itemResolutionContainer"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:background="@drawable/ic_border_resolution"
+  android:paddingHorizontal="10dp"
+  android:paddingVertical="2.5dp">
+
+  <TextView
+    android:id="@+id/rName"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="10dp"
-    android:background="@drawable/ic_border_resolution"
-    android:paddingVertical="2.5dp">
-
-    <TextView
-        android:id="@+id/rName"
-        tools:textColor="@color/white"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/svn_gilroy_semi_bold"
-        android:text="1ngày" />
+    android:fontFamily="@font/svn_gilroy_semi_bold"
+    android:text="1ngày"
+    tools:textColor="@color/white" />
 </LinearLayout>

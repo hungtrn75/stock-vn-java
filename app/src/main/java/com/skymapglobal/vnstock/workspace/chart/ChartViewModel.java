@@ -82,7 +82,7 @@ public class ChartViewModel extends ViewModel {
                     break;
             }
             Long from = fromCalendar.getTime().getTime() / 1000;
-            Log.e("getHistory", String.format("from:%d, to: %d", from, to));
+            Log.e("getHistory", String.format("from:%02d, to: %02d", from, to));
             return service.getHistory(code, from, to, res.getValue())
                     .map(history -> new Pair<>(res, history));
         }).map(pair -> {
@@ -166,6 +166,11 @@ public class ChartViewModel extends ViewModel {
             List<LineData> rsi6 = RSI.calculateEmaFromCandlestickData(data, 6);
             List<LineData> rsi14 = RSI.calculateEmaFromCandlestickData(data, 14);
 
+            memoEma20.clear();
+            memoEma25.clear();
+            memoRsi6.clear();
+            memoRsi14.clear();
+            memoVol.clear();
             ema20.forEach(ema -> memoEma20.put(ema.getTime(), ema.getValue()));
             ema25.forEach(ema -> memoEma25.put(ema.getTime(), ema.getValue()));
             rsi6.forEach(rsi -> memoRsi6.put(rsi.getTime(), rsi.getValue()));

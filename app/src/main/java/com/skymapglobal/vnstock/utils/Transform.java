@@ -1,6 +1,7 @@
 package com.skymapglobal.vnstock.utils;
 
 import android.annotation.SuppressLint;
+import java.text.DecimalFormat;
 
 public class Transform {
 
@@ -24,5 +25,24 @@ public class Transform {
     }
     return String.valueOf(number);
 
+  }
+
+  public static String priceWithDecimal (Float price) {
+    DecimalFormat formatter = new DecimalFormat("###,###,###.00");
+    return formatter.format(price);
+  }
+
+  public static String priceWithoutDecimal (Float price) {
+    DecimalFormat formatter = new DecimalFormat("###,###,###.##");
+    return formatter.format(price);
+  }
+
+  public static String priceToString(Float price) {
+    String toShow = priceWithoutDecimal(price);
+    if (toShow.indexOf(".") > 0) {
+      return priceWithDecimal(price);
+    } else {
+      return priceWithoutDecimal(price);
+    }
   }
 }
