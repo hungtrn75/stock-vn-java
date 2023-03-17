@@ -2,9 +2,12 @@ package com.skymapglobal.vnstock.service;
 
 import com.skymapglobal.vnstock.models.ListStockResp;
 import com.skymapglobal.vnstock.models.Stock;
-import com.skymapglobal.vnstock.models.Stockmarket;
+import com.skymapglobal.vnstock.models.StockMarket;
+
 
 import java.util.List;
+
+import io.reactivex.ObservableSource;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 import io.reactivex.Observable;
@@ -17,5 +20,6 @@ public interface APIInterface {
   Observable<ListStockResp> getStock2s();
 
  @GET("https://banggia.cafef.vn/stockhandler.ashx?index=true")
-  Observable<List<Stockmarket>> getStockmarket();
+  Observable<List<StockMarket>> getStockMarket();
+
 }

@@ -1,12 +1,12 @@
 package com.skymapglobal.vnstock.models;
 
-public class Stockmarket {
+public class StockMarket {
     private String name;
     private String index;
     private String change;
     private String percent;
 
-    public Stockmarket(String name, String index, String change, String percent) {
+    public StockMarket(String name, String index, String change, String percent) {
         this.name = name;
         this.index = index;
         this.change = change;

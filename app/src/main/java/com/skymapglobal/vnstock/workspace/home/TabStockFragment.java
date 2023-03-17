@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.skymapglobal.vnstock.ListActivity;
+
 import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.models.StockItem;
 import com.skymapglobal.vnstock.workspace.detail.DetailActivity;
@@ -20,7 +20,7 @@ import java.util.List;
 public class TabStockFragment extends Fragment implements StockClickListener {
 
   private List<StockItem> stockItemList;
-  private RecyclerView mRvStock;
+  private RecyclerView mRvStock ;
   private StockAdapter mStockAdapter;
 
   public TabStockFragment(List<StockItem> stocks) {

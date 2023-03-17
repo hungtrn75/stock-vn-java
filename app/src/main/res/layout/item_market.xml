@@ -21,18 +21,28 @@
                 android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="VN INDEX"/>
+                android:text="VN INDEX"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_700"/>
             <TextView
                 android:id="@+id/index"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1.053.000"/>
+                android:text="1.053.000"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                />
             <TextView
                 android:id="@+id/change_percent"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="+1.630"
-                android:background="@color/green"/>
+                android:textSize="13dp"
+                android:background="@color/green"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:paddingBottom="3dp"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

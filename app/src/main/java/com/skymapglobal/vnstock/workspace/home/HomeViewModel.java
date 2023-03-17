@@ -8,7 +8,8 @@ import com.skymapglobal.vnstock.models.ListStockResp;
 import com.skymapglobal.vnstock.models.SortBy;
 import com.skymapglobal.vnstock.models.Stock;
 import com.skymapglobal.vnstock.models.StockItem;
-import com.skymapglobal.vnstock.models.Stockmarket;
+import com.skymapglobal.vnstock.models.StockMarket;
+
 import com.skymapglobal.vnstock.models.Tab;
 import com.skymapglobal.vnstock.service.APIClient;
 import com.skymapglobal.vnstock.service.APIInterface;
@@ -139,8 +140,8 @@ public class HomeViewModel extends AndroidViewModel {
     }
   }
 
-  public Observable<List<Stockmarket>> getStockmarket(){
-     return Observable.interval(0,1, TimeUnit.MINUTES).flatMap(aLong -> service.getStockmarket()).repeat();
+  public Observable<List<StockMarket>> getStockMarket(){
+     return Observable.interval(0,1, TimeUnit.MINUTES).flatMap(aLong -> service.getStockMarket()).repeat();
   }
   public void getStocks(Boolean... showLoadings) {
     if (showLoadings.length > 0 && showLoadings[0]) {
@@ -171,7 +172,9 @@ public class HomeViewModel extends AndroidViewModel {
             if (stock != null) {
               StockItem stockItem = new StockItem(stock2.getCode(), stock2.getCompanyName(),
                   stock2.getFloor(), stock2.getIndexCode(), stock.k,
-                  100 * (stock.l - stock.b) / stock.b, stock.l,stock.n
+                  100 * (stock.l - stock.b) / stock.b, stock.l,stock.n,stock.b,stock.c,stock.d,stock.m*10,stock.j*10,
+                      stock.h*10,stock.f*10,stock.i,stock.g,stock.e,stock.o,stock.q,stock.s,stock.p*10,stock.r*10,stock.t*10,
+                      stock.v,stock.w
                       );
               res.add(stockItem);
             }

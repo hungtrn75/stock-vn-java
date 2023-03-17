@@ -17,7 +17,7 @@
       android:name=".workspace.detail.DetailActivity" />
     <activity
       android:exported="true"
-      android:name=".ListActivity">
+      android:name=".view.ListActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
 

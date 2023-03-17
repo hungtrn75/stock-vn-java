@@ -1,4 +1,4 @@
-package com.skymapglobal.vnstock;
+package com.skymapglobal.vnstock.view;
 
 import android.content.Intent;
 import android.graphics.PorterDuff;
@@ -7,36 +7,36 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.widget.SearchView.OnCloseListener;
 import androidx.appcompat.widget.SearchView.OnQueryTextListener;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.MenuItemCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.skymapglobal.vnstock.R;
 import com.skymapglobal.vnstock.models.SortBy;
 import com.skymapglobal.vnstock.models.StockItem;
+import com.skymapglobal.vnstock.models.StockMarket;
 import com.skymapglobal.vnstock.workspace.detail.DetailActivity;
 import com.skymapglobal.vnstock.workspace.home.HomeViewModel;
 import com.skymapglobal.vnstock.workspace.home.StockAdapter;
 import com.skymapglobal.vnstock.workspace.home.StockClickListener;
+import com.skymapglobal.vnstock.workspace.home.StockMarketAdapter;
 import com.skymapglobal.vnstock.workspace.home.StockPagerAdapter;
+
+import java.util.List;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ListActivity extends AppCompatActivity implements StockClickListener {
 
@@ -54,6 +54,8 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
   ProgressBar progressBar;
   private final CompositeDisposable mCompositeDisposable = new CompositeDisposable();
 
+  private RecyclerView marketRV;
+  private StockMarketAdapter marketAdapter;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -77,6 +79,7 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
 
     stockPagerAdapter = new StockPagerAdapter(this);
     viewPager2.setAdapter(stockPagerAdapter);
+
 
     Disposable disposable = viewModel.getObsStocks().subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
@@ -121,14 +124,21 @@ public class ListActivity extends AppCompatActivity implements StockClickListene
           progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
         }));
 
-    Disposable disposable5 = viewModel.getStockmarket().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(stockmarkets -> {
-                      Log.e("getStockmarket", String.valueOf(stockmarkets.size()));
+    Disposable disposable5 = viewModel.getStockMarket().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(stockMarkets -> {
+                      Log.e("getStockMarket", String.valueOf(stockMarkets.size()));
+
+                      marketRV = findViewById(R.id.marketRV);
+                      marketAdapter = new StockMarketAdapter(stockMarkets,this);
+                      marketRV.setAdapter(marketAdapter);
+                      LinearLayoutManager horizontalLayout = new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false);
+                      marketRV.setLayoutManager(horizontalLayout);
                     });
     mCompositeDisposable.add(disposable);
     mCompositeDisposable.add(disposable2);
     mCompositeDisposable.add(disposable3);
     mCompositeDisposable.add(disposable4);
+    mCompositeDisposable.add(disposable5);
   }
 
   @Override
